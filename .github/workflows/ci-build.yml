@@ -19,17 +19,21 @@ on:
 jobs:
   ant-build:
     runs-on: CICD
+    env:  
+      JAVA_HOME: ${{ inputs.java_home }}
+      ANT_HOME: ${{ inputs.ant_home }}
+      PATH: ${{ inputs.java_home }}/bin:${{ inputs.ant_home }}/bin:${{ env.PATH }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup tools
         run: |
-              export JAVA_HOME=${{ inputs.java_home }}
-              export ANT_HOME=${{ inputs.ant_home }}
-              export PATH=${PATH}:${JAVA_HOME}/bin:${ANT_HOME}/bin
+              echo "JAVA_HOME=$JAVA_HOME"
               java -version
+              echo "ANT_HOME=$ANT_HOME"
               ant -version
 
       - name: Run Ant Build
-        run: ${ANT_HOME}/bin/ant ${{ inputs.ant_target }}
+        run: ant ${{ inputs.ant_target }}
