@@ -10,30 +10,32 @@ on:
       java_home:
         required: true
         type: string
-        default: build
       ant_home:
         required: true
         type: string
-        default: build
 
 jobs:
   ant-build:
     runs-on: CICD
-    env:  
+    env:
       JAVA_HOME: ${{ inputs.java_home }}
       ANT_HOME: ${{ inputs.ant_home }}
-      PATH: ${{ inputs.java_home }}/bin:${{ inputs.ant_home }}/bin:${{ env.PATH }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup PATH
+        run: |
+          echo "${JAVA_HOME}/bin" >> $GITHUB_PATH
+          echo "${ANT_HOME}/bin" >> $GITHUB_PATH
+
       - name: Setup tools
         run: |
-              echo "JAVA_HOME=$JAVA_HOME"
-              java -version
-              echo "ANT_HOME=$ANT_HOME"
-              ant -version
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          echo "ANT_HOME=$ANT_HOME"
+          ant -version
 
       - name: Run Ant Build
         run: ant ${{ inputs.ant_target }}
