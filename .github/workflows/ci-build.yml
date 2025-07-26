@@ -32,4 +32,4 @@ jobs:
               ant -version
 
       - name: Run Ant Build
-        run: ${ANT_HOME}/bin/ant ${{ inputs.ant_target }}
+        run: ant ${{ inputs.ant_target }}
