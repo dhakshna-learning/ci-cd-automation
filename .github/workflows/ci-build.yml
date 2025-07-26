@@ -1,0 +1,27 @@
+name: CI Build Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      ant_target:
+        required: false
+        type: string
+        default: build
+
+jobs:
+  ant-build:
+    runs-on: CICD
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up ANT
+        run: |
+              export JAVA_HOME=${{ vars.JAVA_HOME }}
+              export ANT_HOME=${{ vars.ANT_HOME }}
+              export PATH=${PATH}:${JAVA_HOME}/bin:${ANT_HOME}/bin
+              java -version
+              ant -version
+
+      - name: Run Ant Build
+        run: ant ${{ inputs.ant_target }}
