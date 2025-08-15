@@ -24,4 +24,6 @@ jobs:
           else
             echo "❌ ${{ inputs.ant_target }} failed"
           fi
+
+          ls -lrta
         
