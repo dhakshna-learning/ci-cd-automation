@@ -25,5 +25,5 @@ jobs:
             echo "❌ ${{ inputs.ant_target }} failed"
           fi
 
-          ls -lrta build
+          ls -lrta build/jar
         
