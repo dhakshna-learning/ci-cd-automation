@@ -15,6 +15,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validating the Branch
+        run: |
+          BRANCH_NAME=${{ github.ref }}
+          shopt -s nocasematch
+          if [[ "$BRANCH_NAME" =~ ^refs/heads/feat/.* ]]; then
+                echo -e "Workflow started from a valid branch: $BRANCH_NAME, and the workflow will be executed."            
+          else 
+              echo -e "⚠️ This workflow cannot run from the branch '$BRANCH_NAME'. Allowed branches are: feature branches (example feat/abc, feat/xyz)"
+              echo -e "❌ The workflow will not be executed."
+              exit 1
+          fi 
+          shopt -u nocasematch
+
       - name: Run Ant Build
         run: |
           ant ${{ inputs.ant_target }}
