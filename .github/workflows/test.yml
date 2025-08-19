@@ -15,42 +15,21 @@ permissions:
     contents: read  
 
 jobs:
-  CI-Build:
+  CI-secrets-Build:
     runs-on: ubuntu-latest
-    env:
-      environment: ${{ inputs.environment }}
-
+    environment: ${{ inputs.environment }}
+    
     steps:
-      - name: Install AWS CLI
-        run: pip install awscli
-        
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.OIDC_ARN }}
           aws-region: ${{ vars.REGION }}
 
-      - name: Run AWS CLI command
-        run: aws sts get-caller-identity
-
-      - name: Deploy Environment Check
-        run: |
-            if [[ ${{ inputs.environment }} != "R&D" ]]; then
-              echo "⛔ You're trying to deploy the application in ${{ inputs.environment }} - This deployment is not allowed in this workflow..."
-              exit 1
-            else
-              echo "✅ Validation on environment is completed. You're good to go."
-            fi
-            
       - name: Deploying the application
         run: |
-          INSTANCE_ID=${{ secrets.HOST }}
-          REGION=${{ vars.REGION }}
-          
-          echo "Deploying the application based on Ant Target: ${{ inputs.ant_target }}"
-          
+          echo "Deploying to instance: ${{ secrets.HOST }}"
           aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --targets '[{"Key":"InstanceIds","Values":["$INSTANCE_ID"]}]' \
-              --parameters '{"commands": ["#!/bin/bash","echo HELLO >> /tmp/test.txt"]}'
-        
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
+            --parameters 'commands=["echo HELLO >> /tmp/test.txt"]'
