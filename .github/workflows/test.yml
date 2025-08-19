@@ -13,7 +13,8 @@ on:
 jobs:
   CI-Build:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    env:
+      environment: ${{ inputs.environment }}
 
     steps:
       - name: Install AWS CLI
