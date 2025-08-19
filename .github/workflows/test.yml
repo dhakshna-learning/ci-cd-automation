@@ -23,7 +23,7 @@ jobs:
       - name: Debug Vars
         run: |
           echo "REGION=${{ vars.REGION }}"
-          echo "OIDC=${{ vars.OIDC_ROLE }}"
+          echo "OIDC=${{ secrets.OIDC_ARN }}"
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
