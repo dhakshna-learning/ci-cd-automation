@@ -25,16 +25,16 @@ jobs:
           echo "REGION=${{ vars.REGION }}"
           echo "OIDC=${{ secrets.OIDC_ARN }}"
           
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.OIDC_ROLE }}
-          aws-region: ${{ vars.REGION }}
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ vars.OIDC_ROLE }}
+      #     aws-region: ${{ vars.REGION }}
 
-      - name: Deploying the application
-        run: |
-          echo "Deploying to instance: ${{ secrets.HOST }}"
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
-            --parameters 'commands=["echo HELLO >> /tmp/test.txt"]'
+      # - name: Deploying the application
+      #   run: |
+      #     echo "Deploying to instance: ${{ secrets.HOST }}"
+      #     aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
+      #       --parameters 'commands=["echo HELLO >> /tmp/test.txt"]'
