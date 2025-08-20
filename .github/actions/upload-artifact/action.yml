@@ -5,21 +5,33 @@ branding:
   color: blue
 
 inputs:
+  domain:
+    required: true
+  domain-owner:
+    required: true
+  region:
+    required: true
+  repository:
+    required: true
+  format:
+    required: true
+  package_name:
+    required: true
   package_version:
-    description: "Artifact version"
     required: true
   files:
-    description: "A single file or a folder that will be published as .gz file"
     required: true 
+  namespace:
+    required: true
 
 runs:
   using: 'composite'
   steps:
     - shell: bash
       run: |
-        tar -czvf ${{ vars.PACKAGE_NAME }}.tar.gz ${{ inputs.files }}
-        export ASSET_SHA256=$(sha256sum ${{ vars.PACKAGE_NAME }}.tar.gz | awk '{print $1;}')
-        aws codeartifact publish-package-version --domain ${{ vars.DOMAIN }} --domain-owner ${{ secrets.DOMAIN_OWNER }} --repository ${{ vars.REPOSITORY }} \
-          --format ${{ vars.FORMAT }} --namespace ${{ vars.NAMESPACE }} --package ${{ vars.PACKAGE_NAME }} --package-version ${{ inputs.package_version }} \
-          --asset-content ${{ vars.PACKAGE_NAME }}.tar.gz --asset-name ${{ vars.PACKAGE_NAME }}.tar.gz \
-          --asset-sha256 $ASSET_SHA256 --region ${{ vars.REGION }}
+        tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
+        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
+        aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
+          --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
+          --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
