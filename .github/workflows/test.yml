@@ -80,7 +80,7 @@ jobs:
           done
 
       - name: Fetch and Print Command Output
-        if: steps.run_command.outputs.STATUS  != "Success"
+        if: steps.run_command.outputs.STATUS  != 'Success'
         run: |
           echo "Fetching command output..."
           OUTPUT=$(aws ssm get-command-invocation \
