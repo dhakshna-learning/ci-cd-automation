@@ -20,10 +20,8 @@ jobs:
     environment: ${{ inputs.environment }}
     
     steps:
-      - name: Debug Vars
-        run: |
-          echo "REGION=${{ vars.REGION }}"
-          echo "OIDC=${{ secrets.OIDC_ARN }}"
+      - name: Checkout Code
+        uses: actions/checkout@v4
           
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
