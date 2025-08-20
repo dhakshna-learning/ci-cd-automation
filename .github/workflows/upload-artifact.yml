@@ -1,0 +1,32 @@
+name: Upload Artifact to CodeArtifact
+
+on:
+  workflow_call:
+
+permissions:
+  id-token: write  
+  contents: read
+
+jobs:
+  Upload-Artifact:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Debug Vars
+        run: |
+          echo "REGION=${{ vars.REGION }}"
+          echo "OIDC=${{ secrets.OIDC_ARN }}"
+          
+      - name: Checkout github actions
+        uses: actions/checkout@v4
+        with:
+          repository: dhakshna-learning/ci-cd-automation
+          ref: 'master'
+          path: github-actions
+
+      # Begin Calling composite action here
+      - name: Initiating the Artifact Upload
+        id: upload
+        uses: ./github-actions/.github/actions/upload-artifact
+      # End Calling composite action here
