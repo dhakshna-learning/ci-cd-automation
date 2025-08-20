@@ -25,6 +25,11 @@ jobs:
           ref: 'master'
           path: github-actions
 
+      - name: Download the artifcats to upload
+        uses: actions/download-artifact@v4
+        with:
+          name: Build-Artifacts
+
       # Begin Calling composite action here
       - name: Initiating the Artifact Upload
         id: upload
