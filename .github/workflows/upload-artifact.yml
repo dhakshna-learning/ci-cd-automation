@@ -2,6 +2,10 @@ name: Upload Artifact to CodeArtifact
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
 
 permissions:
   id-token: write  
