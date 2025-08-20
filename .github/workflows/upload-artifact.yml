@@ -30,8 +30,15 @@ jobs:
         with:
           name: Build-Artifacts
 
+      - name: Set version
+        id: set-version
+        run: echo VERSION=221 >> $GITHUB_OUTPUT
+
       # Begin Calling composite action here
       - name: Initiating the Artifact Upload
         id: upload
         uses: ./github-actions/.github/actions/upload-artifact
+        with:
+          package_version: ${{ steps.set-version.outputs.VERSION }}
+          files: ./Build-Artifacts/*.jar
       # End Calling composite action here
