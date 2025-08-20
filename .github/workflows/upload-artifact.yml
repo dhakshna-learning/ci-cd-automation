@@ -44,6 +44,13 @@ jobs:
         id: upload
         uses: ./github-actions/.github/actions/upload-artifact
         with:
+          domain: ${{ vars.DOMAIN }}
+          domain-owner: ${{ secrets.DOMAIN_OWNER }}
+          namespace: ${{ vars.NAMESPACE }}
+          region: ${{ vars.REGION }}
+          repository: ${{ vars.REPOSITORY }}
+          format: ${{ vars.FORMAT }}
+          package_name: ${{ vars.PACKAGE_NAME }}
           package_version: ${{ steps.set-version.outputs.VERSION }}
           files: ./Build-Artifacts/*.jar
       # End Calling composite action here
