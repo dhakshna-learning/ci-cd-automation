@@ -5,42 +5,21 @@ branding:
   color: blue
 
 inputs:
-  domain:
-    description: "The name of the domain where artifact will be uploaded"
-    required: true
-  domain-owner:
-    description: "The 12-digit account number of the AWS account that owns the domain. It does not include dashes or spaces."
-    required: true
-  region:
-    description: "AWS Region where CodeArtifact is enabled or will be used."
-    required: true
-  repository:
-    description: "The name of the repository that contains the package version"
-    required: true
-  format:
-    description: "Format of the artifact file that will be uploaded.."
-    required: true
-    default: 'generic'
-  package_name:
-    description: "Artifact name that will be displaced in codeartifact"
-    required: true
   package_version:
     description: "Artifact version"
     required: true
   files:
     description: "A single file or a folder that will be published as .gz file"
     required: true 
-  namespace:
-    description: "The namespace of the package. The package component that specifies its namespace depends on its type"
-    required: true
+
 runs:
   using: 'composite'
   steps:
     - shell: bash
       run: |
-        tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
-        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
-        aws codeartifact publish-package-version --domain ${{ inputs.domain }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
-          --asset-content temp.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
-          --asset-sha256 $ASSET_SHA256
+        tar -czvf ${{ vars.PACKAGE_NAME }}.tar.gz ${{ inputs.files }}
+        export ASSET_SHA256=$(sha256sum ${{ vars.PACKAGE_NAME }}.tar.gz | awk '{print $1;}')
+        aws codeartifact publish-package-version --domain ${{ vars.DOMAIN }} --repository ${{ vars.REPOSITORY }} \
+          --format ${{ vars.FORMAT }} --namespace ${{ vars.NAMESPACE }} --package ${{ vars.PACKAGE_NAME }} --package-version ${{ inputs.package_version }} \
+          --asset-content ${{ vars.PACKAGE_NAME }}.tar.gz --asset-name ${{ vars.PACKAGE_NAME }}.tar.gz \
+          --asset-sha256 $ASSET_SHA256 --region ${{ vars.REGION }}
