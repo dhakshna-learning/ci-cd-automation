@@ -72,7 +72,7 @@ jobs:
               echo "Current status: $STATUS"
 
               if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "TimedOut" || "$STATUS" == "Cancelled" ]]; then
-                  echo STATUS=$STATUS >> $GITHIB_OUTPUT
+                  echo "STATUS=$STATUS" >> "$GITHUB_OUTPUT"
                   break
               fi
 
