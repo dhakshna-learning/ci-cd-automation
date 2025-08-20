@@ -19,7 +19,7 @@ runs:
       run: |
         tar -czvf ${{ vars.PACKAGE_NAME }}.tar.gz ${{ inputs.files }}
         export ASSET_SHA256=$(sha256sum ${{ vars.PACKAGE_NAME }}.tar.gz | awk '{print $1;}')
-        aws codeartifact publish-package-version --domain ${{ vars.DOMAIN }} --repository ${{ vars.REPOSITORY }} \
+        aws codeartifact publish-package-version --domain ${{ vars.DOMAIN }} --domain-owner ${{ secrets.DOMAIN_OWNER }} --repository ${{ vars.REPOSITORY }} \
           --format ${{ vars.FORMAT }} --namespace ${{ vars.NAMESPACE }} --package ${{ vars.PACKAGE_NAME }} --package-version ${{ inputs.package_version }} \
           --asset-content ${{ vars.PACKAGE_NAME }}.tar.gz --asset-name ${{ vars.PACKAGE_NAME }}.tar.gz \
           --asset-sha256 $ASSET_SHA256 --region ${{ vars.REGION }}
