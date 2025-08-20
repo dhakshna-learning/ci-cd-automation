@@ -41,13 +41,13 @@ jobs:
             echo "❌ ${{ inputs.ant_target }} failed"
           fi
 
-      - name: Writing the test
-        run: |
-          echo "Deploying to instance: ${{ secrets.HOST }}"
-          aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
-            --parameters 'commands=["echo HELLO >> /tmp/test.txt"]'
+      # - name: Writing the test
+      #   run: |
+      #     echo "Deploying to instance: ${{ secrets.HOST }}"
+      #     aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
+      #       --parameters 'commands=["echo HELLO >> /tmp/test.txt"]'
 
       - name: Passing the artifact to next job
         uses: actions/upload-artifact@v4
