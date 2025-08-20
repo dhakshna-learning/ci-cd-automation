@@ -59,6 +59,7 @@ jobs:
       #     path: ./build/jar/*
 
       - name: Wait for Command Completion
+        id: run_command
         run: |
           while true; do
               STATUS=$(aws ssm list-command-invocations \
@@ -71,6 +72,7 @@ jobs:
               echo "Current status: $STATUS"
 
               if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "TimedOut" || "$STATUS" == "Cancelled" ]]; then
+                  echo STATUS=$STATUS >> $GITHIB_OUTPUT
                   break
               fi
 
@@ -78,6 +80,7 @@ jobs:
           done
 
       - name: Fetch and Print Command Output
+        if: steps.run_command.outputs.STATUS  != "Success"
         run: |
           echo "Fetching command output..."
           OUTPUT=$(aws ssm get-command-invocation \
