@@ -31,7 +31,17 @@ jobs:
           role-to-assume: ${{ vars.OIDC_ROLE }}
           aws-region: ${{ vars.REGION }}
 
-      - name: Deploying the application
+      - name: Run Ant Build
+        run: |
+          ant ${{ inputs.ant_target }}
+
+          if [ $? -eq 0 ]; then
+            echo "✅ ${{ inputs.ant_target }} completed successfully"
+          else
+            echo "❌ ${{ inputs.ant_target }} failed"
+          fi
+
+      - name: Writing the test
         run: |
           echo "Deploying to instance: ${{ secrets.HOST }}"
           aws ssm send-command \
