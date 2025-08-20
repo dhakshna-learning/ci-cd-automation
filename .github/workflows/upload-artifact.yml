@@ -28,6 +28,7 @@ jobs:
           repository: dhakshna-learning/ci-cd-automation
           ref: master
           path: github-actions
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Download the artifcats to upload
         uses: actions/download-artifact@v4
