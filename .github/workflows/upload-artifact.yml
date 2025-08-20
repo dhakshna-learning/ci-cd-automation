@@ -37,8 +37,10 @@ jobs:
 
       - name: Set version
         id: set-version
-        run: echo VERSION=221 >> $GITHUB_OUTPUT
-
+        run: |
+          echo VERSION=221 >> $GITHUB_OUTPUT
+          ls -lrta
+            
       # Begin Calling composite action here
       - name: Initiating the Artifact Upload
         id: upload
