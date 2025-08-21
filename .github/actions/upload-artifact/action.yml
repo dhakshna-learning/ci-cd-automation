@@ -24,12 +24,20 @@ runs:
   using: 'composite'
   steps:
     - name: Check Artifact
+      id: check-artifact
       shell: bash
       run: |
         EXISTS=$(aws codeartifact list-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
           --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}'].status" \
           --output text)
-        echo $EXISTS
+        echo "EXISTS=$EXISTS" >> "$GITHUB_OUTPUT"
+
+    - name: Delete-Existing-Artifact with Same name
+      if: steps.check-artifact.outputs.EXISTS == 'Published'
+      shell: bash
+      run: |
+        aws codeartifact delete-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}']"
         
     # - name: Upload-Artifact
     # - shell: bash
