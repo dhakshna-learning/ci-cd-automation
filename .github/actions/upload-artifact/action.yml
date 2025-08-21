@@ -1,9 +1,5 @@
 name: aws-codeartifact-publish-package-version
 description: Creates a new generic package version containing one or more assets (or files).
-branding:
-  icon: code
-  color: blue
-
 inputs:
   domain:
     required: true
@@ -27,11 +23,18 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Check Artifact
     - shell: bash
       run: |
-        tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
-        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
-        aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
-          --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
-          --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
+        EXISTS=$(aws codeartifact list-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.domain }} \
+        --format ${{ inputs.format }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}'].status" --output text)
+        
+    # - name: Upload-Artifact
+    # - shell: bash
+    #   run: |
+    #     tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
+    #     export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
+    #     aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.domain }} \
+    #       --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
+    #       --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
+    #       --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
