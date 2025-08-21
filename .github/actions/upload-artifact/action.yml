@@ -37,14 +37,14 @@ runs:
       shell: bash
       run: |
         aws codeartifact delete-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --version ${{ inputs.package_version }}
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --versions ${{ inputs.package_version }}
         
-    # - name: Upload-Artifact
-    # - shell: bash
-    #   run: |
-    #     tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
-    #     export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
-    #     aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-    #       --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
-    #       --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
-    #       --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
+    - name: Upload-Artifact
+    - shell: bash
+      run: |
+        tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
+        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
+        aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
+          --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
+          --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
