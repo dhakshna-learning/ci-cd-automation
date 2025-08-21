@@ -53,7 +53,7 @@ jobs:
           region: ${{ vars.REGION }}
           repository: ${{ vars.REPOSITORY }}
           format: ${{ vars.FORMAT }}
-          package_name: ${{ vars.PACKAGE_NAME }}-SNAPSHOT
+          package_name: ${{ vars.PACKAGE_NAME }}
           package_version: ${{ steps.set-version.outputs.VERSION }}-SNAPSHOT
           files: ./*.jar
       # End Calling composite action here
