@@ -27,6 +27,7 @@ runs:
       id: check-artifact
       shell: bash
       run: |
+        set +e
         EXISTS=$(aws codeartifact list-package-versions \
           --domain ${{ inputs.domain }} \
           --domain-owner ${{ inputs.domain-owner }} \
@@ -35,8 +36,11 @@ runs:
           --namespace ${{ inputs.namespace }} \
           --package ${{ inputs.package_name }} \
           --query "versions[?version=='${{ inputs.package_version }}'].status" \
-          --output text)
+          --output text 2>/dev/null || true)
+        set -e
+
         echo "EXISTS=$EXISTS" >> "$GITHUB_OUTPUT"
+        echo "Artifact check result: $EXISTS"
 
     - name: Delete-Existing-Artifact with Same name
       if: steps.check-artifact.outputs.EXISTS == 'Published'
