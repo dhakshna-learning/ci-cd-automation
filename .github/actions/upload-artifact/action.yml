@@ -27,7 +27,8 @@ runs:
       shell: bash
       run: |
         EXISTS=$(aws codeartifact list-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.domain }} \
-          --format ${{ inputs.format }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}'].status" --output text)
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}'].status" \
+          --output text)
         
     # - name: Upload-Artifact
     # - shell: bash
