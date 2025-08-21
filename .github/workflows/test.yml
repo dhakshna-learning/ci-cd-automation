@@ -29,81 +29,81 @@ jobs:
           role-to-assume: ${{ secrets.OIDC_ARN }}
           aws-region: ${{ vars.REGION }}
 
-      # - name: Run Ant Build
-      #   run: |
-      #     ant ${{ inputs.ant_target }}
-
-      #     if [ $? -eq 0 ]; then
-      #       echo "✅ ${{ inputs.ant_target }} completed successfully"
-      #     else
-      #       echo "❌ ${{ inputs.ant_target }} failed"
-      #     fi
-
-      - name: Writing the test
+      - name: Run Ant Build
         run: |
-          echo "Deploying to instance: ${{ secrets.HOST }}"
-          COMMAND_ID=$(aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
-            --parameters 'commands=["echo HELLO >> /tmp/test.txt"]' \
-            --region=${{ vars.REGION}} \
-            --query "Command.CommandId" --output text)
+          ant ${{ inputs.ant_target }}
 
-          echo "Command sent. Waiting for completion... (Command ID: $COMMAND_ID)"
-          echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
-
-      # - name: Passing the artifact to next job
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: Build-Artifacts
-      #     path: ./build/jar/*
-
-      - name: Wait for Command Completion
-        id: run_command
-        run: |
-          while true; do
-              STATUS=$(aws ssm list-command-invocations \
-                  --command-id "$COMMAND_ID" \
-                  --instance-id "${{ secrets.HOST }}" \
-                  --region "${{ vars.REGION }}" \
-                  --query "CommandInvocations[0].Status" \
-                  --output text)
-
-              echo "Current status: $STATUS"
-
-              if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "TimedOut" || "$STATUS" == "Cancelled" ]]; then
-                  echo "STATUS=$STATUS" >> "$GITHUB_OUTPUT"
-                  break
-              fi
-
-              sleep 5  # Wait before checking again
-          done
-
-      - name: Fetch and Print Command Output
-        if: steps.run_command.outputs.STATUS  != 'Success'
-        run: |
-          echo "Fetching command output..."
-          OUTPUT=$(aws ssm get-command-invocation \
-              --command-id "$COMMAND_ID" \
-              --instance-id "${{ secrets.HOST }}" \
-              --region "${{ vars.REGION }}" \
-              --query "StandardOutputContent" \
-              --output text)
-
-          echo "Fetching errors if any..."
-          STDERR=$(aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ secrets.HOST }}" \
-              --region "${{ vars.REGION }}" \
-            --query "StandardErrorContent" \
-            --output text)
-
-          echo "============ SCRIPT OUTPUT ============"
-          echo "$OUTPUT"
-
-          if [[ -n "$STDERR" ]]; then
-            echo "============ ERROR OUTPUT ============"
-            echo "$STDERR"
-            echo "SSM Command failed with errors!" >&2
-            exit 1
+          if [ $? -eq 0 ]; then
+            echo "✅ ${{ inputs.ant_target }} completed successfully"
+          else
+            echo "❌ ${{ inputs.ant_target }} failed"
           fi
+
+      # - name: Writing the test
+      #   run: |
+      #     echo "Deploying to instance: ${{ secrets.HOST }}"
+      #     COMMAND_ID=$(aws ssm send-command \
+      #       --document-name "AWS-RunShellScript" \
+      #       --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
+      #       --parameters 'commands=["echo HELLO >> /tmp/test.txt"]' \
+      #       --region=${{ vars.REGION}} \
+      #       --query "Command.CommandId" --output text)
+
+          # echo "Command sent. Waiting for completion... (Command ID: $COMMAND_ID)"
+          # echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
+
+      - name: Passing the artifact to next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Artifacts
+          path: ./build/jar/*
+
+      # - name: Wait for Command Completion
+      #   id: run_command
+      #   run: |
+      #     while true; do
+      #         STATUS=$(aws ssm list-command-invocations \
+      #             --command-id "$COMMAND_ID" \
+      #             --instance-id "${{ secrets.HOST }}" \
+      #             --region "${{ vars.REGION }}" \
+      #             --query "CommandInvocations[0].Status" \
+      #             --output text)
+
+      #         echo "Current status: $STATUS"
+
+      #         if [[ "$STATUS" == "Success" || "$STATUS" == "Failed" || "$STATUS" == "TimedOut" || "$STATUS" == "Cancelled" ]]; then
+      #             echo "STATUS=$STATUS" >> "$GITHUB_OUTPUT"
+      #             break
+      #         fi
+
+      #         sleep 5  # Wait before checking again
+      #     done
+
+      # - name: Fetch and Print Command Output
+      #   if: steps.run_command.outputs.STATUS  != 'Success'
+      #   run: |
+      #     echo "Fetching command output..."
+      #     OUTPUT=$(aws ssm get-command-invocation \
+      #         --command-id "$COMMAND_ID" \
+      #         --instance-id "${{ secrets.HOST }}" \
+      #         --region "${{ vars.REGION }}" \
+      #         --query "StandardOutputContent" \
+      #         --output text)
+
+      #     echo "Fetching errors if any..."
+      #     STDERR=$(aws ssm get-command-invocation \
+      #       --command-id "$COMMAND_ID" \
+      #       --instance-id "${{ secrets.HOST }}" \
+      #         --region "${{ vars.REGION }}" \
+      #       --query "StandardErrorContent" \
+      #       --output text)
+
+      #     echo "============ SCRIPT OUTPUT ============"
+      #     echo "$OUTPUT"
+
+      #     if [[ -n "$STDERR" ]]; then
+      #       echo "============ ERROR OUTPUT ============"
+      #       echo "$STDERR"
+      #       echo "SSM Command failed with errors!" >&2
+      #       exit 1
+      #     fi
