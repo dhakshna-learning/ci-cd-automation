@@ -37,7 +37,7 @@ runs:
       shell: bash
       run: |
         aws codeartifact delete-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}']"
+          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --version ${{ inputs.package_version }}
         
     # - name: Upload-Artifact
     # - shell: bash
