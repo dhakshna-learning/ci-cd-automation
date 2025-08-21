@@ -27,8 +27,14 @@ runs:
       id: check-artifact
       shell: bash
       run: |
-        EXISTS=$(aws codeartifact list-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --query "versions[?version=='${{ inputs.package_version }}'].status" \
+        EXISTS=$(aws codeartifact list-package-versions \
+          --domain ${{ inputs.domain }} \
+          --domain-owner ${{ inputs.domain-owner }} \
+          --repository ${{ inputs.repository }} \
+          --format ${{ inputs.format }} \
+          --namespace ${{ inputs.namespace }} \
+          --package ${{ inputs.package_name }} \
+          --query "versions[?version=='${{ inputs.package_version }}'].status" \
           --output text)
         echo "EXISTS=$EXISTS" >> "$GITHUB_OUTPUT"
 
@@ -36,15 +42,63 @@ runs:
       if: steps.check-artifact.outputs.EXISTS == 'Published'
       shell: bash
       run: |
-        aws codeartifact delete-package-versions --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --versions ${{ inputs.package_version }}
+        aws codeartifact delete-package-versions \
+          --domain ${{ inputs.domain }} \
+          --domain-owner ${{ inputs.domain-owner }} \
+          --repository ${{ inputs.repository }} \
+          --format ${{ inputs.format }} \
+          --namespace ${{ inputs.namespace }} \
+          --package ${{ inputs.package_name }} \
+          --versions ${{ inputs.package_version }}
         
     - name: Upload-Artifact
-    - shell: bash
+      shell: bash
       run: |
         tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
         export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
-        aws codeartifact publish-package-version --domain ${{ inputs.domain }} --domain-owner ${{ inputs.domain-owner }} --repository ${{ inputs.repository }} \
-          --format ${{ inputs.format }} --namespace ${{ inputs.namespace }} --package ${{ inputs.package_name }} --package-version ${{ inputs.package_version }} \
-          --asset-content ${{ inputs.package_name }}.tar.gz --asset-name ${{ inputs.package_name }}.tar.gz \
-          --asset-sha256 $ASSET_SHA256 --region ${{ inputs.region }}
+        aws codeartifact publish-package-version \
+            --domain ${{ inputs.domain }} \
+            --domain-owner ${{ inputs.domain-owner }} \
+            --repository ${{ inputs.repository }} \
+            --format ${{ inputs.format }} \
+            --namespace ${{ inputs.namespace }} \
+            --package ${{ inputs.package_name }} \
+            --package-version ${{ inputs.package_version }} \
+            --asset-content ${{ inputs.package_name }}.tar.gz \
+            --asset-name ${{ inputs.package_name }}.tar.gz \
+            --asset-sha256 $ASSET_SHA256 \
+            --region ${{ inputs.region }}
+
+    - name: Verify Uploaded Artifact
+      id: verify-artifact
+      shell: bash
+      run: |
+        # Retry loop (wait for CodeArtifact eventual consistency)
+        for i in {1..5}; do
+          EXISTS=$(aws codeartifact list-package-versions \
+            --domain ${{ inputs.domain }} \
+            --domain-owner ${{ inputs.domain-owner }} \
+            --repository ${{ inputs.repository }} \
+            --format ${{ inputs.format }} \
+            --namespace ${{ inputs.namespace }} \
+            --package ${{ inputs.package_name }} \
+            --query "versions[?version=='${{ inputs.package_version }}'].status" \
+            --output text)
+
+          echo "Check #$i: status=$EXISTS"
+
+          if [[ "$EXISTS" == "Published" ]]; then
+            echo "VERIFY=Success" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Waiting for artifact to be published..."
+          sleep 5
+        done
+
+        echo "VERIFY=Failed" >> "$GITHUB_OUTPUT"
+        exit 1
+
+        
+        
+        
