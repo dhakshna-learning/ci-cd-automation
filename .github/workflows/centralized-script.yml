@@ -39,16 +39,19 @@ jobs:
 
       - name: Writing the test
         run: |
-          echo "Deploying to instance: ${{ secrets.HOST }}"
-          COMMAND_ID=$(aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
-            --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
-            --parameters 'commands=["bash -c \"$(cat upload/scripts/deploy.sh)\""]' \
-            --region=${{ vars.REGION}} \
-            --query "Command.CommandId" --output text)
+          # echo "Deploying to instance: ${{ secrets.HOST }}"
+          # COMMAND_ID=$(aws ssm send-command \
+          #   --document-name "AWS-RunShellScript" \
+          #   --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
+          #   --parameters 'commands=["bash -c \"$(cat upload/scripts/deploy.sh)\""]' \
+          #   --region=${{ vars.REGION}} \
+          #   --query "Command.CommandId" --output text)
 
-          echo "Command sent. Waiting for completion... (Command ID: $COMMAND_ID)"
-          echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
+          # echo "Command sent. Waiting for completion... (Command ID: $COMMAND_ID)"
+          # echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
+
+          ls -lrta
+          ls -lrta upload/
 
       # - name: Wait for Command Completion
       #   id: run_command
