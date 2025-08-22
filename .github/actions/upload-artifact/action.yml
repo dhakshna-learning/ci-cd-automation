@@ -58,9 +58,8 @@ runs:
     - name: Upload-Artifact
       shell: bash
       run: |
-        # tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
-        # export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
-        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }} | awk '{print $1;}')
+        tar -czvf ${{ inputs.package_name }}.tar.gz ${{ inputs.files }}
+        export ASSET_SHA256=$(sha256sum ${{ inputs.package_name }}.tar.gz | awk '{print $1;}')
         aws codeartifact publish-package-version \
             --domain ${{ inputs.domain }} \
             --domain-owner ${{ inputs.domain-owner }} \
@@ -69,8 +68,8 @@ runs:
             --namespace ${{ inputs.namespace }} \
             --package ${{ inputs.package_name }} \
             --package-version ${{ inputs.package_version }} \
-            --asset-content ${{ inputs.package_name }} \
-            --asset-name ${{ inputs.package_name }} \
+            --asset-content ${{ inputs.package_name }}.tar.gz \
+            --asset-name ${{ inputs.package_name }}.tar.gz \
             --asset-sha256 $ASSET_SHA256 \
             --region ${{ inputs.region }}
 
