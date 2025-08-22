@@ -40,6 +40,11 @@ jobs:
       - name: Writing the test
         run: |
           echo "Deploying to instance: ${{ secrets.HOST }}"
+          cat upload/scripts/deploy.sh | head -20
+          ls -lrta
+          ls -lrta upload/
+          ls -lrta upload/scripts/
+          
           COMMAND_ID=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
@@ -48,11 +53,7 @@ jobs:
             --query "Command.CommandId" --output text)
 
           echo "Command sent. Waiting for completion... (Command ID: $COMMAND_ID)"
-          # echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
-
-          ls -lrta
-          ls -lrta upload/
-          ls -lrta upload/scripts/
+          # echo "COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV          
 
       # - name: Wait for Command Completion
       #   id: run_command
