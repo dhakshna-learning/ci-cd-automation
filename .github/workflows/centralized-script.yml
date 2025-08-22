@@ -52,6 +52,7 @@ jobs:
 
           ls -lrta
           ls -lrta upload/
+          ls -lrta upload/scripts/
 
       # - name: Wait for Command Completion
       #   id: run_command
