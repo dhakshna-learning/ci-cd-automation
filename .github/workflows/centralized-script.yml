@@ -35,7 +35,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=InstanceIds,Values=${{ secrets.HOST }}" \
-            -- comment "Deploy Script"
+            -- comment "Deploy Script" \
             --parameters 'commands=["bash -c \"$(cat ./script/deploy.sh)\""]' \
             --region=${{ vars.REGION}} \
             --query "Command.CommandId" --output text)
