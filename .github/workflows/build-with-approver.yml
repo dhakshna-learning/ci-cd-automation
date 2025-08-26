@@ -1,0 +1,65 @@
+name: CI Build Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      ant_target:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+
+permissions:
+  id-token: write  
+  contents: read
+
+jobs:
+  CI-secrets-Build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_ARN }}
+          aws-region: ${{ vars.REGION }}
+
+      - name: Run Ant Build
+        run: |
+          ant ${{ inputs.ant_target }}
+
+          if [ $? -eq 0 ]; then
+            echo "✅ ${{ inputs.ant_target }} completed successfully"
+          else
+            echo "❌ ${{ inputs.ant_target }} failed"
+          fi
+
+      - name: Passing the artifact to next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Artifacts
+          path: ./build/jar/*
+
+      - name: Approval Required to proceed
+        id: required-approval
+        run: |
+          APPROVERS=$(jq -r '.approverGroups[] | select(.name=="PipelineAdmin") | .approvers[].id' .github/approvers.json)
+          echo "Allowed Approvers:"
+          echo "$APPROVERS"
+          echo "APPROVERS=$APPROVERS" >> $GITHUB_ENV
+
+      - name: Validate approver
+        run: |
+          echo "Current Actor: ${{ github.actor }}"
+          if ! echo "$APPROVERS" | grep -q "^${{ github.actor }}$"; then
+            echo "❌ ${{ github.actor }} is NOT authorized to approve this pipeline."
+            exit 1
+          fi
+          echo "✅ Approval granted by ${{ github.actor }}"
+
+  
