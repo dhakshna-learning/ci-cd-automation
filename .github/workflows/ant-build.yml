@@ -1,0 +1,56 @@
+name: CI Build Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      ant_target:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+
+permissions:
+  id-token: write  
+  contents: read
+
+jobs:
+  CI-secrets-Build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_ARN }}
+          aws-region: ${{ vars.REGION }}
+
+      - name: Run Ant Build
+        run: |
+          ant ${{ inputs.ant_target }}
+
+          if [ $? -eq 0 ]; then
+            echo "✅ ${{ inputs.ant_target }} completed successfully"
+          else
+            echo "❌ ${{ inputs.ant_target }} failed"
+            exit 1
+          fi
+
+      - name: Uploading the artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Artifacts
+          path: ./build/jar/*
+
+      - name: Create an issue
+        uses: JasonEtco/create-an-issue@v2.6.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RUNNUMBER: ${{ github.run_number  }}
+        with:         
+          filename: .github/deployment-approval.md
