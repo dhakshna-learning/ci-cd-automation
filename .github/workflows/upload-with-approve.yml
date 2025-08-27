@@ -1,6 +1,7 @@
 name: Upload Artifact to CodeArtifact
 
 on:
+  workflow_call:
   issue_comment:
     types: [created]
 
