@@ -57,5 +57,8 @@ jobs:
         with:
           filename: .github/deployment-approval.md
 
+    # outputs:
+    #   approval_issue_number: ${{ steps.create_issue.outputs.issue-number }}
     outputs:
-      approval_issue_number: ${{ steps.create_issue.outputs.issue-number }}
+      issue_number: ${{ jobs.create_issue_job.outputs.issue_number }}
+      run_number: ${{ github.run_number }}
