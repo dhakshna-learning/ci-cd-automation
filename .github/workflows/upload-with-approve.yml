@@ -2,6 +2,11 @@ name: Upload Artifact to CodeArtifact
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        description: 'please pass the environment' 
+        type: string
+        required: true
   issue_comment:
     types: [created]
 
@@ -29,7 +34,7 @@ jobs:
 
   deploy-dev:
     needs: [parse]
-    if: ${{ needs.parse.outputs.deploy-environment == 'Dev' }}
+    if: ${{ needs.parse.outputs.deploy-environment == '${{ inputs.environments }}' }}
     runs-on: ubuntu-latest
     
     steps:
