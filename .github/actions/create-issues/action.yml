@@ -7,5 +7,5 @@ runs:
 inputs:
   filename:
     description: The name of the file to use as the issue template
-    default: .github/deployment-approval.md
+    default: .github/ISSUE_TEMPLATE.md
     required: false
