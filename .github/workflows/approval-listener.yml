@@ -1,0 +1,32 @@
+name: Approval Listener
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: read
+  contents: read
+  actions: write
+
+jobs:
+  check_approval:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.comment.body == 'Approved' && !github.event.issue.pull_request }}
+
+    steps:
+      - name: Parse payload from issue body
+        id: parse_issue
+        uses: peter-murray/issue-body-parser-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_id: ${{ github.event.issue.number }}
+          payload_marker: target_payload
+
+      - name: Trigger deployment workflow
+        uses: dhakshna-learning/ci-cd-automation/.github/workflows/deploy-on-approval.yml@master
+        with:
+          environment: ${{ fromJSON(steps.parse_issue.outputs.payload).environment }}
+          issue_number: ${{ github.event.issue.number }}
+          run_number: ${{ fromJSON(steps.parse_issue.outputs.payload).runNumber }}
+        secrets: inherit
