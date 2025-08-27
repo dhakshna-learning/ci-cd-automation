@@ -55,7 +55,7 @@ runs:
         while [[ $attempt -lt $max_attempts ]]; do
           echo "🔄 Attempt $((attempt+1))/$max_attempts: Creating GitHub issue..."
 
-          response=$(curl -s -X POST -H "Authorization: token $(get_github_token)" \
+          response=$(curl -s -X POST -H "Authorization: token $(generate_token)" \
             -H "Accept: application/vnd.github+json" \
             -d @- "https://api.github.com/repos/$REPO/issues" <<EOF
           {
@@ -138,7 +138,7 @@ runs:
         echo -e "Expecting approval from $APPROVERS"
 
         while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-          response=$(curl -s -H "Authorization: token $(get_github_token)" \
+          response=$(curl -s -H "Authorization: token $(generate_token)" \
             "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
 
           if ! echo "$response" | jq -e . >/dev/null 2>&1; then
@@ -206,7 +206,7 @@ runs:
           exit 1
         fi
 
-        comment_response=$(curl -s -X POST -H "Authorization: token $(get_github_token)" \
+        comment_response=$(curl -s -X POST -H "Authorization: token $(generate_token)" \
           -H "Accept: application/vnd.github+json" \
           -d "{\"body\": \"$COMMENT_MESSAGE\"}" \
           "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
@@ -218,7 +218,7 @@ runs:
         close_attempt=0
         max_close_attempts=5
         while [[ $close_attempt -lt $max_close_attempts ]]; do
-          close_response=$(curl -s -X PATCH -H "Authorization: token $(get_github_token)" \
+          close_response=$(curl -s -X PATCH -H "Authorization: token $(generate_token)" \
             -H "Accept: application/vnd.github+json" \
             -d '{"state": "closed"}' \
             "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
@@ -262,7 +262,7 @@ runs:
             echo "$token"
         }
         "🚨 Workflow canceled. Closing issue #$ISSUE_NUMBER..."
-        response=$(curl -s -X PATCH -H "Authorization: token $(get_github_token)" \
+        response=$(curl -s -X PATCH -H "Authorization: token $(generate_token)" \
           -H "Accept: application/vnd.github+json" \
           -d '{"state": "closed"}' \
           "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
