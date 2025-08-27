@@ -49,6 +49,7 @@ jobs:
         uses: JasonEtco/create-an-issue@v2.6.0
         env:
           ENVIRONMENT: ${{ inputs.environment }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           RUNNUMBER: ${{ github.run_number  }}
         with:
           filename: .github/deployment-approval.md
