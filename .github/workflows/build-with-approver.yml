@@ -19,6 +19,9 @@ jobs:
   CI-secrets-Build:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      issue_number: ${{ steps.create_issue.outputs.issue_number }}
+      run_number: ${{ github.run_number }}
     
     steps:
       - name: Checkout Code
