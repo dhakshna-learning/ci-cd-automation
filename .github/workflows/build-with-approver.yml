@@ -13,6 +13,7 @@ on:
 permissions:
   id-token: write  
   contents: read
+  issues: write
 
 jobs:
   CI-secrets-Build:
@@ -37,16 +38,18 @@ jobs:
             echo "✅ ${{ inputs.ant_target }} completed successfully"
           else
             echo "❌ ${{ inputs.ant_target }} failed"
+            exit 1
           fi
 
-      - name: Passing the artifact to next job
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Build-Artifacts
           path: ./build/jar/*
 
-      - name: create an issue
+      - name: Create deployment approval issue
         uses: JasonEtco/create-an-issue@v2.6.0
+        id: create_issue
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -54,4 +57,5 @@ jobs:
         with:
           filename: .github/deployment-approval.md
 
-  
+    outputs:
+      approval_issue_number: ${{ steps.create_issue.outputs.issue-number }}
