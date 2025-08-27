@@ -46,7 +46,7 @@ jobs:
           path: ./build/jar/*
 
       - name: create an issue
-        uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
+        uses: JasonEtco/create-an-issue@v2.6.0
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           RUNNUMBER: ${{ github.run_number  }}
