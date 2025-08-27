@@ -1,0 +1,11 @@
+name: Create an issue
+description: Creates a new issue using a template with front matter.
+runs:
+  using: node20
+  main: dist/index.js
+
+inputs:
+  filename:
+    description: The name of the file to use as the issue template
+    default: .github/deployment-approval.md
+    required: false
