@@ -45,21 +45,21 @@ jobs:
           name: Build-Artifacts
           path: ./build/jar/*
 
-      - name: Approval Required to proceed
-        id: required-approval
-        run: |
-          APPROVERS=$(jq -r '.approverGroups[] | select(.name=="PipelineAdmin") | .approvers[].id' .github/approvers.json)
-          echo "Allowed Approvers:"
-          echo "$APPROVERS"
-          echo "APPROVERS=$APPROVERS" >> $GITHUB_ENV
+      # - name: Approval Required to proceed
+      #   id: required-approval
+      #   run: |
+      #     APPROVERS=$(jq -r '.approverGroups[] | select(.name=="PipelineAdmin") | .approvers[].id' .github/approvers.json)
+      #     echo "Allowed Approvers:"
+      #     echo "$APPROVERS"
+      #     echo "APPROVERS=$APPROVERS" >> $GITHUB_ENV
 
-      - name: Validate approver
-        run: |
-          echo "Current Actor: ${{ github.actor }}"
-          if ! echo "$APPROVERS" | grep -q "^${{ github.actor }}$"; then
-            echo "❌ ${{ github.actor }} is NOT authorized to approve this pipeline."
-            exit 1
-          fi
-          echo "✅ Approval granted by ${{ github.actor }}"
+      # - name: Validate approver
+      #   run: |
+      #     echo "Current Actor: ${{ github.actor }}"
+      #     if ! echo "$APPROVERS" | grep -q "^${{ github.actor }}$"; then
+      #       echo "❌ ${{ github.actor }} is NOT authorized to approve this pipeline."
+      #       exit 1
+      #     fi
+      #     echo "✅ Approval granted by ${{ github.actor }}"
 
   
