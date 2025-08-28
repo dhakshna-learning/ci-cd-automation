@@ -44,6 +44,10 @@ runs:
           "$GITHUB_ACTION_PATH"/scripts/generate_token.sh "$PEM_KEY"
         }
 
+        echo ####################################
+        echo # TMP_TOKEN= ${TMP_TOKEN}
+        echo ####################################
+        
         if [[ "$MODE" == "create" ]]; then
           echo "📌 Creating approval issue..."
           TAGGED_APPROVERS=$(echo "$APPROVERS" | sed 's/,/ @/g' | sed 's/^/@/')
