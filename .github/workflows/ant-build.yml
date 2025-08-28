@@ -74,11 +74,11 @@ jobs:
             exit 1
           fi
 
-      # - name: Uploading the artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: Build-Artifacts
-      #     path: ./build/jar/*
+      - name: Uploading the artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build-Artifacts
+          path: ./build/jar/*
 
       # - name: Create an issue
       #   uses: JasonEtco/create-an-issue@v2.6.0
