@@ -33,7 +33,7 @@ jobs:
         run: |
           ISSUE_ID=${{ needs.code-build.outputs.issue_number }}
           
-          IF [ -z "$ISSUE_ID" ]; then
+          if [ -z "$ISSUE_ID" ]; then
             echo "Error: ISSUE_ID is empty"
             exit 1
           fi
