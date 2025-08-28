@@ -9,6 +9,9 @@ on:
       jira_ref:
         required: true
         type: string
+      issue_number:
+        required: true
+        type: number
 
 permissions:
   id-token: write  
@@ -31,7 +34,7 @@ jobs:
       - name: Retrieve the Issue number
         shell: bash
         run: |
-          ISSUE_ID=${{ needs.code-build.outputs.issue_number }}
+          ISSUE_ID=${{ inputs.issue_number }}
           
           if [ -z "$ISSUE_ID" ]; then
             echo "Error: ISSUE_ID is empty"
