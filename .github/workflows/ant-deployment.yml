@@ -27,6 +27,12 @@ jobs:
           ref: master
           path: ci-cd-automation
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      
+      - name: Retrieve the Issue number
+        run: |
+          ISSUE_ID=${{ needs.build.outputs.issue_number }}
+          echo "Issue ID: $ISSUE_ID"
+        shell: bash
 
       - name: Wait for Approval
         uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
