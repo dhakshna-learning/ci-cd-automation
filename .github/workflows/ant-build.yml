@@ -86,6 +86,7 @@ jobs:
           repository: dhakshna-learning/ci-cd-automation
           ref: master
           path: ci-cd-automation
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - name: Debug automation Repo
         run: |
