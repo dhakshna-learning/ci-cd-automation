@@ -56,6 +56,9 @@ jobs:
     needs: Initialising
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      issue_number: ${{ steps.parse_issue.outputs.issue_number }}
+      
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4            
@@ -115,3 +118,14 @@ jobs:
             DevOps Team
           approvers: ${{ needs.Initialising.outputs.devops_ids }}
           secret: ${{ secrets.PEM_KEY }}
+
+      - name: Parse the Issue Number
+        id: parse_issue
+        run: |
+          ISSUE_NUMBER="${{ steps.create_issue.outputs.issue-number }}"
+          if [[ -z "$ISSUE_NUMBER" ]]; then
+            echo "❌ Issue number not found!"
+            exit 1
+          fi
+          echo "✅ Issue number is $ISSUE_NUMBER"
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
