@@ -181,7 +181,7 @@ runs:
                 COMMENT_MESSAGE="❌ Rejected by @$user"
                 break 2
               fi
-            elif echo "Seeta-BA,reshma-iag,shubham-iag" | grep -qi "\\b$user\\b"; then
+            elif echo "Dhakshnamoorthy-Cloud" | grep -qi "\\b$user\\b"; then
               if echo "$body" | grep -Eiq "$APPROVAL_REGEX"; then
                 APPROVED="true"
                 COMMENT_MESSAGE="✅ Approved by Admin User @$user"
