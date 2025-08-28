@@ -18,39 +18,64 @@ jobs:
   CI-secrets-Build:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    outputs:
+      devops: ${{ steps.check_approvers.outputs.devops }}
     
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-          
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.OIDC_ARN }}
-          aws-region: ${{ vars.REGION }}
 
-      - name: Run Ant Build
+      - name: Check Approvers
+        id: check_approvers
         run: |
-          ant ${{ inputs.ant_target }}
+          DATA_FILE=".github/approvers.json"
+          TEAMS=$(jq -r '.teams | keys[]' "$DATA_FILE")
+          
+          for team in $TEAMS; do
+              # Extract IDs for the team
+              user_ids=$(jq -r --arg team "$team" '.teams[$team][]?.id' "$DATA_FILE" | sort -u | paste -sd "," -)
+          
+              if [[ -n "$user_ids" ]]; then
+                  echo "${team,,}_ids=$user_ids" >> "$GITHUB_OUTPUT"
+                  echo "$team IDs: $user_ids"
+              else
+                  echo "Skipping $team (no approvers found)"
+              fi
+          done
 
-          if [ $? -eq 0 ]; then
-            echo "✅ ${{ inputs.ant_target }} completed successfully"
-          else
-            echo "❌ ${{ inputs.ant_target }} failed"
-            exit 1
-          fi
+      - name: Debug Outputs
+        run: |
+          echo -e "devops: ${{ steps.check_approvers.outputs.devops_ids }}
+            
+          
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.OIDC_ARN }}
+      #     aws-region: ${{ vars.REGION }}
 
-      - name: Uploading the artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build-Artifacts
-          path: ./build/jar/*
+      # - name: Run Ant Build
+      #   run: |
+      #     ant ${{ inputs.ant_target }}
 
-      - name: Create an issue
-        uses: JasonEtco/create-an-issue@v2.6.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          ENVIRONMENT: ${{ inputs.environment }}
-          RUNNUMBER: ${{ github.run_number  }}
-        with:         
-          filename: .github/deployment-approval.md
+      #     if [ $? -eq 0 ]; then
+      #       echo "✅ ${{ inputs.ant_target }} completed successfully"
+      #     else
+      #       echo "❌ ${{ inputs.ant_target }} failed"
+      #       exit 1
+      #     fi
+
+      # - name: Uploading the artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: Build-Artifacts
+      #     path: ./build/jar/*
+
+      # - name: Create an issue
+      #   uses: JasonEtco/create-an-issue@v2.6.0
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      #     ENVIRONMENT: ${{ inputs.environment }}
+      #     RUNNUMBER: ${{ github.run_number  }}
+      #   with:         
+      #     filename: .github/deployment-approval.md
