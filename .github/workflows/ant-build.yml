@@ -50,7 +50,7 @@ jobs:
       - name: Debug Outputs
         run: |
           echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
-          echo "jira ref: ${{ inputs.jira_ref }}
+          echo "jira ref: ${{ inputs.jira_ref }}"
 
   code-build:
     name: Code-Build
