@@ -18,6 +18,11 @@ inputs:
     description: "GitHub token or app secret"
     required: true
 
+outputs:
+  issue-number:
+    description: "The created issue number"
+    value: ${{ steps.approval.outputs.issue-number }}
+
 runs:
   using: "composite"
   steps:
@@ -63,11 +68,11 @@ runs:
             exit 1
           fi
 
-          #echo "✅ Created issue #$issue_number"
+          # echo "✅ Created issue #$issue_number"
           echo "issue-number=$issue_number" >> "$GITHUB_OUTPUT"
 
         elif [[ "$MODE" == "wait" ]]; then
-          echo "⏳ Waiting for approval on issue #$ISSUE_NUMBER..."
+          echo "⏳ Waiting for approval on issue $issue_number..."
           MAX_WAIT=$((30*60))  # 30 mins
           ELAPSED=0
           SLEEP_NORMAL=30
