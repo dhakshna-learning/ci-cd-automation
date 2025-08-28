@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     outputs:
-      devops: ${{ steps.check_approvers.outputs.devops_ids }}
+      devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}
     
     steps:
       - name: Checkout Code
@@ -53,14 +53,10 @@ jobs:
     needs: Initialising
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    outputs:
-      devops: ${{ needs.Initialising.outputs.devops }}
-
-
-      steps:
-        - name: Debug Outputs
-          run: |
-            echo -e "devops: ${{ needs.Initialising.outputs.devops }}"
+    steps:
+      - name: Debug Outputs
+        run: |
+          echo -e "devops_ids: ${{ needs.Initialising.outputs.devops_ids }}"
             
           
       # - name: Configure AWS credentials
