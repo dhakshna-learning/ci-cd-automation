@@ -45,7 +45,7 @@ jobs:
 
       - name: Debug Outputs
         run: |
-          echo -e "devops: ${{ steps.check_approvers.outputs.devops_ids }}"
+          echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
             
           
       # - name: Configure AWS credentials
