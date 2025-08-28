@@ -54,27 +54,25 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - name: Debug Outputs
-        run: |
-          echo -e "devops_ids: ${{ needs.Initialising.outputs.devops_ids }}"
-            
+      - name: Checkout Code
+        uses: actions/checkout@v4            
           
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: ${{ secrets.OIDC_ARN }}
-      #     aws-region: ${{ vars.REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_ARN }}
+          aws-region: ${{ vars.REGION }}
 
-      # - name: Run Ant Build
-      #   run: |
-      #     ant ${{ inputs.ant_target }}
+      - name: Run Ant Build
+        run: |
+          ant ${{ inputs.ant_target }}
 
-      #     if [ $? -eq 0 ]; then
-      #       echo "✅ ${{ inputs.ant_target }} completed successfully"
-      #     else
-      #       echo "❌ ${{ inputs.ant_target }} failed"
-      #       exit 1
-      #     fi
+          if [ $? -eq 0 ]; then
+            echo "✅ ${{ inputs.ant_target }} completed successfully"
+          else
+            echo "❌ ${{ inputs.ant_target }} failed"
+            exit 1
+          fi
 
       # - name: Uploading the artifact
       #   uses: actions/upload-artifact@v4
