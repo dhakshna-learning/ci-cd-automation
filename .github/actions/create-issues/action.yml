@@ -37,7 +37,7 @@ runs:
         echo "${{ inputs.secret }}" > "$PEM_KEY"
         chmod 600 "$PEM_KEY"
         chmod +x "${{ github.action_path }}/scripts/generate_token.sh"        
-        TOKEN=$("${{ github.action_path }}/scripts/generate_token.sh" "$PEM_KEY" | grep TMP_TOKEN | cut -d '=' -f 2)
+        TOKEN=$("${{ github.action_path }}/scripts/generate_token.sh" "$PEM_KEY")
         echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
 
         echo "Using token: $TOKEN"
