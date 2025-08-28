@@ -42,5 +42,6 @@ RESPONSE=$(curl -s -X POST \
 # 📤 Output the Token
 # -------------------------------
 TMP_TOKEN=$(echo "$RESPONSE" | grep '"token":' | cut -d '"' -f 4)
-echo "TMP_TOKEN=$TMP_TOKEN" >> "$GITHUB_ENV"
+echo $TMP_TOKEN
+# echo "TMP_TOKEN=$TMP_TOKEN" >> "$GITHUB_ENV"
 
