@@ -13,6 +13,11 @@ on:
         required: true
         type: string
 
+    outputs:
+      issue_number:
+        description: "TCreated Issue ID"
+        value: ${{ jobs.code-build.outputs.issue_number }}
+
 permissions:
   id-token: write  
   contents: read
@@ -58,7 +63,7 @@ jobs:
     environment: ${{ inputs.environment }}
     outputs:
       issue_number: ${{ steps.parse_issue.outputs.issue_number }}
-      
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4            
