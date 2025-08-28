@@ -1,270 +1,176 @@
 name: "Approval Required"
-description: "Creates a GitHub issue for approval process"
+description: "Manages a single GitHub issue for multi-stage approval"
 
 inputs:
+  mode:
+    description: "Action mode: create | wait | close"
+    required: true
   issue-title:
     description: "Title of the issue"
-    required: true
+    required: false
   issue-body:
     description: "Summary/body of the issue"
-    required: true
-  approvers:
-    description: "Comma-separated list of approvers"
-    required: true
-  additional_approval_keywords:
-    description: "Comma-separated additional approval keywords"
     required: false
-  additional_rejection_keywords:
-    description: "Comma-separated additional rejection keywords"
+  approvers:
+    description: "List of approvers"
     required: false
   secret:
-    description: "GitHub token"
-    required: false
+    description: "GitHub token or app secret"
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Create Issue
-      id: create-issue
+    - name: Run Approval Logic
+      id: approval
       env:
-        PEM: ${{ inputs.secret }}
+        MODE: ${{ inputs.mode }}
         REPO: ${{ github.repository }}
+        PEM: ${{ inputs.secret }}
         ISSUE_TITLE: ${{ inputs['issue-title'] }}
         ISSUE_SUMMARY: ${{ inputs['issue-body'] }}
         APPROVERS: ${{ inputs.approvers }}
       shell: bash
       run: |
-        generate_token(){
-            local token=""
-            local GITHUB_ACTION_PATH=${{ github.action_path }}
-            local PEM_KEY=${GITHUB_ACTION_PATH}/secret.pem
-            echo "$PEM" > ${PEM_KEY_FILE}
-            sync  
-            chmod 600 "$PEM_KEY"
-            chmod +x $GITHUB_ACTION_PATH/scripts/generate_token.sh
-            token=$("$GITHUB_ACTION_PATH"/scripts/generate_token.sh "$PEM_KEY")
-            [[ $? != 0 ]] && exit 1
-            echo "$token"
-        }
-    
-        attempt=0
-        max_attempts=5
-        MENTIONED_APPROVERS=$(echo "$APPROVERS" | sed 's/,/ @/g' | sed 's/^/@/')
-        DEFAULT_APPROVING_MESSAGE="\nTo approve, comment anything from: approve approved yes done ${additional_approval_keywords}\n\nTo reject, comment anything from: rejected reject no stop ${additional_rejection_keywords}"
+        set -euo pipefail
 
-        while [[ $attempt -lt $max_attempts ]]; do
-          echo "🔄 Attempt $((attempt+1))/$max_attempts: Creating GitHub issue..."
+        generate_token(){
+          local GITHUB_ACTION_PATH=${{ github.action_path }}
+          local PEM_KEY=${GITHUB_ACTION_PATH}/secret.pem
+          echo "$PEM" > "$PEM_KEY"
+          sync
+          chmod 600 "$PEM_KEY"
+          chmod +x "$GITHUB_ACTION_PATH/scripts/generate_token.sh"
+          "$GITHUB_ACTION_PATH"/scripts/generate_token.sh "$PEM_KEY"
+        }
+
+        if [[ "$MODE" == "create" ]]; then
+          echo "📌 Creating approval issue..."
+          TAGGED_APPROVERS=$(echo "$APPROVERS" | sed 's/,/ @/g' | sed 's/^/@/')
+          DEFAULT_COMMENTS="\nTo approve, comment anything from: approve approved \n\nTo reject, comment anything from: reject rejected stop"
 
           response=$(curl -s -X POST -H "Authorization: token $(generate_token)" \
             -H "Accept: application/vnd.github+json" \
             -d @- "https://api.github.com/repos/$REPO/issues" <<EOF
           {
             "title": "$ISSUE_TITLE",
-            "body": "$ISSUE_SUMMARY\n\n**Approvers:** $MENTIONED_APPROVERS\n\n$DEFAULT_APPROVING_MESSAGE"
+            "body": "$ISSUE_SUMMARY\n\n**Approvers:** $TAGGED_APPROVERS\n\n$DEFAULT_COMMENTS"
           }
         EOF
           )
 
-          if echo "$response" | jq -e '.number' >/dev/null 2>&1; then
-            issue_number=$(echo "$response" | jq -r '.number')
-            if [ -n "$issue_number" ] && [ "$issue_number" != "null" ]; then
-              echo "✅ Created issue #$issue_number"
-              echo "ISSUE_NUMBER=$issue_number" >> "$GITHUB_ENV"
-              break
-            fi
-          else
-            echo "❌ Failed to parse issue number from response."
-            echo "API response was: $response"
+          issue_number=$(echo "$response" | jq -r '.number')
+          if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
+            echo "❌ Failed to create issue: $response"
+            exit 1
           fi
 
-          attempt=$((attempt + 1))
-          echo "🔁 Retrying in 10 seconds..."
-          sleep 10
-        done
+          echo "✅ Created issue #$issue_number"
+          echo "issue-number=$issue_number" >> "$GITHUB_OUTPUT"
 
-        if [ -z "$issue_number" ] || [ "$issue_number" == "null" ]; then
-          echo "❌ Failed to create issue after $max_attempts attempts."
-          echo "Final API response was: $response"
-          exit 1
-        fi
+        elif [[ "$MODE" == "wait" ]]; then
+          echo "⏳ Waiting for approval on issue #$ISSUE_NUMBER..."
+          MAX_WAIT=$((30*60))  # 30 mins
+          ELAPSED=0
+          SLEEP_NORMAL=30
+          SLEEP_ERROR=300
 
-    - name: Wait for Approval
-      id: wait-for-approval
-      env:
-        PEM: ${{ inputs.secret }}
-        REPO: ${{ github.repository }}
-        ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
-        APPROVERS: ${{ inputs.approvers }}
-      shell: bash
-      run: |
-        generate_token(){
-            local token=""
-            local GITHUB_ACTION_PATH=${{ github.action_path }}
-            local PEM_KEY=${GITHUB_ACTION_PATH}/secret.pem
-            echo "$PEM" > ${PEM_KEY_FILE}
-            sync  
-            chmod 600 "$PEM_KEY"
-            chmod +x $GITHUB_ACTION_PATH/scripts/generate_token.sh
-            token=$("$GITHUB_ACTION_PATH"/scripts/generate_token.sh "$PEM_KEY")
-            [[ $? != 0 ]] && exit 1
-            echo "$token"
-        }
-
-        echo "⏳ Waiting for manual approval..."
-        echo "${{ inputs['issue-body'] }}"
-        ADDITIONAL_APPROVALS="${{ inputs.additional_approval_keywords }}"
-        ADDITIONAL_REJECTIONS="${{ inputs.additional_rejection_keywords }}"
-        MAX_WAIT=$((5*24*60*60))  # 5 days
-        ELAPSED=0
-        SLEEP_NORMAL=30
-        SLEEP_ERROR=300
-
-        DEFAULT_APPROVALS="approved|approve|yes|done"
-        APPROVAL_REGEX="^($DEFAULT_APPROVALS)$"
-        if [[ -n "$ADDITIONAL_APPROVALS" ]]; then
-          EXTRA_APPROVALS=$(echo "$ADDITIONAL_APPROVALS" | sed 's/,/|/g')
-          APPROVAL_REGEX="^($DEFAULT_APPROVALS|$EXTRA_APPROVALS)$"
-        fi
-
-        DEFAULT_REJECTIONS="rejected|reject|no|stop"
-        REJECTION_REGEX="^($DEFAULT_REJECTIONS)$"
-        if [[ -n "$ADDITIONAL_REJECTIONS" ]]; then
-          EXTRA_REJECTIONS=$(echo "$ADDITIONAL_REJECTIONS" | sed 's/,/|/g')
-          REJECTION_REGEX="^($DEFAULT_REJECTIONS|$EXTRA_REJECTIONS)$"
-        fi
-
-        APPROVED="false"
-        COMMENT_MESSAGE=""
-        echo -e "Expecting approval from $APPROVERS"
-
-        while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-          response=$(curl -s -H "Authorization: token $(generate_token)" \
-            "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
-
-          if ! echo "$response" | jq -e . >/dev/null 2>&1; then
-            echo "❌ Failed to parse comments. Retrying in $SLEEP_ERROR seconds..."
-            echo "API response was: $response"
-            sleep "$SLEEP_ERROR"
-            ELAPSED=$((ELAPSED + SLEEP_ERROR))
-            continue
+          DEFAULT_APPROVALS="approved|approve|yes|done"
+          APPROVAL_REGEX="^($DEFAULT_APPROVALS)$"
+          if [[ -n "$ADDITIONAL_APPROVALS" ]]; then
+            EXTRA_APPROVALS=$(echo "$ADDITIONAL_APPROVALS" | sed 's/,/|/g')
+            APPROVAL_REGEX="^($DEFAULT_APPROVALS|$EXTRA_APPROVALS)$"
           fi
 
-          comments=$(echo "$response" | jq -r '.[] | @base64')
+          DEFAULT_REJECTIONS="rejected|reject|no|stop"
+          REJECTION_REGEX="^($DEFAULT_REJECTIONS)$"
+          if [[ -n "$ADDITIONAL_REJECTIONS" ]]; then
+            EXTRA_REJECTIONS=$(echo "$ADDITIONAL_REJECTIONS" | sed 's/,/|/g')
+            REJECTION_REGEX="^($DEFAULT_REJECTIONS|$EXTRA_REJECTIONS)$"
+          fi
 
-          while IFS= read -r encoded_comment; do
-            comment=$(echo "$encoded_comment" | base64 --decode)
-            if [[ -z "$encoded_comment" ]]; then
+          APPROVED="false"
+          COMMENT_MESSAGE=""
+          echo -e "Expecting approval from $APPROVERS"
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            response=$(curl -s -H "Authorization: token $(generate_token)" \
+              "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
+
+            if ! echo "$response" | jq -e . >/dev/null 2>&1; then
+              echo "❌ Failed to parse comments. Retrying in $SLEEP_ERROR seconds..."
+              echo "API response was: $response"
+              sleep "$SLEEP_ERROR"
+              ELAPSED=$((ELAPSED + SLEEP_ERROR))
               continue
             fi
-            # Validate comment is JSON
-            if ! echo "$comment" | jq -e 'type == "object"' >/dev/null 2>&1; then
-              echo "⚠️ Skipping non-JSON comment: $comment"
-              continue
-            fi
 
-            # Extract user and body safely
-            user=$(echo "$comment" | jq -r '.user.login // "unknown"')
-            body=$(echo "$comment" | jq -r '.body // ""' | tr '[:upper:]' '[:lower:]')
+            comments=$(echo "$response" | jq -r '.[] | @base64')
 
-            if [ "$user" == "unknown" ]; then
-              echo "⚠️ Comment without valid user, skipping..."
-              continue
-            fi
-
-            if echo "$APPROVERS" | grep -qi "\\b$user\\b"; then
-              if echo "$body" | grep -Eiq "$APPROVAL_REGEX"; then
-                APPROVED="true"
-                COMMENT_MESSAGE="✅ Approved by @$user"
-                break 2
-              elif echo "$body" | grep -Eiq "$REJECTION_REGEX"; then
-                APPROVED="false"
-                COMMENT_MESSAGE="❌ Rejected by @$user"
-                break 2
+            while IFS= read -r encoded_comment; do
+              comment=$(echo "$encoded_comment" | base64 --decode)
+              if [[ -z "$encoded_comment" ]]; then
+                continue
               fi
-            elif echo "Dhakshnamoorthy-Cloud" | grep -qi "\\b$user\\b"; then
-              if echo "$body" | grep -Eiq "$APPROVAL_REGEX"; then
-                APPROVED="true"
-                COMMENT_MESSAGE="✅ Approved by Admin User @$user"
-                break 2
-              elif echo "$body" | grep -Eiq "$REJECTION_REGEX"; then
-                APPROVED="false"
-                COMMENT_MESSAGE="❌ Rejected by Admin User @$user"
-                break 2
+              # Validate comment is JSON
+              if ! echo "$comment" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                continue
               fi
-            else
-              echo "$user is not an authorized approver. Ignored."
-            fi
-          done <<< "$comments"
 
-          sleep "$SLEEP_NORMAL"
+              user=$(echo "$comment" | jq -r '.user.login // "unknown"')
+              body=$(echo "$comment" | jq -r '.body // ""' | tr '[:upper:]' '[:lower:]')
 
-          ELAPSED=$((ELAPSED + SLEEP_NORMAL))
-        done
+              if [ "$user" == "unknown" ]; then
+                continue
+              fi
 
-        if [ "$ELAPSED" -ge "$MAX_WAIT" ] && [ "$APPROVED" == "false" ]; then
-          echo "⏱ Reached maximum wait without approval."
-          exit 1
-        fi
+              if echo "$APPROVERS" | grep -qi "\\b$user\\b"; then
+                if echo "$body" | grep -Eiq "$APPROVAL_REGEX"; then
+                  APPROVED="true"
+                  COMMENT_MESSAGE="✅ Approved by @$user"
+                  break 2
+                elif echo "$body" | grep -Eiq "$REJECTION_REGEX"; then
+                  APPROVED="false"
+                  COMMENT_MESSAGE="❌ Rejected by @$user"
+                  break 2
+                fi
+              fi
+            done <<< "$comments"
 
-        comment_response=$(curl -s -X POST -H "Authorization: token $(generate_token)" \
-          -H "Accept: application/vnd.github+json" \
-          -d "{\"body\": \"$COMMENT_MESSAGE\"}" \
-          "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
+            sleep "$SLEEP_NORMAL"
+            ELAPSED=$((ELAPSED + SLEEP_NORMAL))
+          done
 
-        # echo "📌 Comment response:" 
-        # echo "$comment_response"
-        echo "$COMMENT_MESSAGE"
-        echo "🔒 Closing issue #$ISSUE_NUMBER..."
-        close_attempt=0
-        max_close_attempts=5
-        while [[ $close_attempt -lt $max_close_attempts ]]; do
-          close_response=$(curl -s -X PATCH -H "Authorization: token $(generate_token)" \
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ] && [ "$APPROVED" == "false" ]; then
+            echo "⏱ Reached maximum wait without approval."
+            exit 1
+          fi
+
+          # Add approval/rejection comment
+          curl -s -X POST -H "Authorization: token $(generate_token)" \
+            -H "Accept: application/vnd.github+json" \
+            -d "{\"body\": \"$COMMENT_MESSAGE\"}" \
+            "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
+
+          echo "$COMMENT_MESSAGE"
+          if [ "$APPROVED" == "false" ]; then
+            exit 1
+          fi
+
+        elif [[ "$MODE" == "close" ]]; then
+          echo "🔒 Closing issue #$ISSUE_NUMBER..."
+          response=$(curl -s -X PATCH -H "Authorization: token $(generate_token)" \
             -H "Accept: application/vnd.github+json" \
             -d '{"state": "closed"}' \
             "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
-
-          # echo "📌 Close response:" 
-          # echo "$close_response"
-
-          if echo "$close_response" | jq -e '.state == "closed"' >/dev/null 2>&1; then
-            echo "✅ Issue #$ISSUE_NUMBER closed."
-            break
+          state=$(echo "$response" | jq -r '.state')
+          if [[ "$state" == "closed" ]]; then
+            echo "✅ Issue closed successfully"
+          else
+            echo "❌ Failed to close issue: $response"
+            exit 1
           fi
-
-          close_attempt=$((close_attempt + 1))
-          echo "🔁 Retrying closing in 10 seconds..."
-          sleep 10
-        done
-
-        if [ "$APPROVED" == "false" ]; then
-          echo "❌ Approval was not received or was explicitly rejected."
+        else
+          echo "❌ Unknown mode: $MODE"
           exit 1
         fi
-
-    - name: Workflow Canceled, Close Issue Now
-      if: cancelled()
-      env:
-        PEM: ${{ inputs.secret }}
-        REPO: ${{ github.repository }}
-        ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
-      shell: bash
-      run: |
-        generate_token(){
-            local token=""
-            local GITHUB_ACTION_PATH=${{ github.action_path }}
-            local PEM_KEY=${GITHUB_ACTION_PATH}/secret.pem
-            echo "$PEM" > ${PEM_KEY_FILE}
-            sync  
-            chmod 600 "$PEM_KEY"
-            chmod +x $GITHUB_ACTION_PATH/scripts/generate_token.sh
-            token=$("$GITHUB_ACTION_PATH"/scripts/generate_token.sh "$PEM_KEY")
-            [[ $? != 0 ]] && exit 1
-            echo "$token"
-        }
-        "🚨 Workflow canceled. Closing issue #$ISSUE_NUMBER..."
-        response=$(curl -s -X PATCH -H "Authorization: token $(generate_token)" \
-          -H "Accept: application/vnd.github+json" \
-          -d '{"state": "closed"}' \
-          "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
-        echo "📌 Close response:" 
-        echo "$response"
