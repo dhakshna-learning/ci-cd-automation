@@ -60,7 +60,7 @@ jobs:
       steps:
         - name: Debug Outputs
           run: |
-          echo -e "devops_ids: ${{ steps.Initialising.outputs.devops }}"
+            echo -e "devops: ${{ needs.Initialising.outputs.devops }}"
             
           
       # - name: Configure AWS credentials
