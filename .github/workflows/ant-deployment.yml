@@ -1,0 +1,60 @@
+name: CD deployment Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      jira_ref:
+        required: true
+        type: string
+
+permissions:
+  id-token: write  
+  contents: read
+
+jobs:
+  wait-for-approval:
+    name: Wait-for-Approval
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          repository: dhakshna-learning/ci-cd-automation
+          ref: master
+          path: ci-cd-automation
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Wait for Approval
+        uses: dhakshna-learning/reusable-repo/.github/actions/create-issue@main
+        id: wait_approval
+        with:
+          mode: "wait"
+          issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
+          issue-body: |
+            Hi Team,
+
+            Please review and approve the deployment to proceed.
+
+            https://dcloudsystems.atlassian.net/browse/${{ inputs.jira_ref }}
+
+            Thanks,
+            DevOps Team
+          approvers: ${{ needs.Initialising.outputs.devops_ids }}
+          secret: ${{ secrets.PEM_KEY }}
+
+  deploy:
+    name: deployment
+    needs: wait-for-approval
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Deploying to ${{ inputs.environment }} environment
+        run: |
+          echo "Deploying to ${{ inputs.environment }} environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
