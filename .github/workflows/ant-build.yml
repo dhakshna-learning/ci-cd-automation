@@ -15,11 +15,12 @@ permissions:
   contents: read
 
 jobs:
-  CI-secrets-Build:
+  Initialising:
+    name: Initialisation
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     outputs:
-      devops: ${{ steps.check_approvers.outputs.devops }}
+      devops: ${{ steps.check_approvers.outputs.devops_ids }}
     
     steps:
       - name: Checkout Code
@@ -46,6 +47,20 @@ jobs:
       - name: Debug Outputs
         run: |
           echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
+
+    code-build:
+      name: Code Build
+      needs: Initialising
+      runs-on: ubuntu-latest
+      environment: ${{ inputs.environment }}
+      outputs:
+        devops: ${{ needs.Initialising.outputs.devops }}
+
+
+      steps:
+        - name: Debug Outputs
+          run: |
+          echo -e "devops_ids: ${{ steps.Initialising.outputs.devops }}"
             
           
       # - name: Configure AWS credentials
