@@ -63,7 +63,7 @@ runs:
             exit 1
           fi
 
-          echo "✅ Created issue #$issue_number"
+          #echo "✅ Created issue #$issue_number"
           echo "issue-number=$issue_number" >> "$GITHUB_OUTPUT"
 
         elif [[ "$MODE" == "wait" ]]; then
