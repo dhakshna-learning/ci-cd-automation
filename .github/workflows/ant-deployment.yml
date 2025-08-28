@@ -29,10 +29,18 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
       - name: Retrieve the Issue number
+        shell: bash
         run: |
           ISSUE_ID=${{ needs.code-build.outputs.issue_number }}
+          
+          IF [ -z "$ISSUE_ID" ]; then
+            echo "Error: ISSUE_ID is empty"
+            exit 1
+          fi
           echo "Issue ID: $ISSUE_ID"
-        shell: bash
+
+
+        
 
   #     - name: Wait for Approval
   #       uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
