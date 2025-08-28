@@ -50,7 +50,6 @@ jobs:
       - name: Debug Outputs
         run: |
           echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
-          echo "jira ref: ${{ inputs.jira_ref }}"
 
   code-build:
     name: Code-Build
@@ -95,4 +94,24 @@ jobs:
       - name: Debug automation Repo
         run: |
           ls
-          ls -ltr ./ci-cd-automation
+          ls -ltra ./ci-cd-automation
+
+      - name: creating issue for approval
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
+        id: create_issue
+        with:
+          mode: "create"
+          issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
+          issue-body: |
+            Hi Team,
+
+            The build for the `${{ inputs.environment }}` environment has completed successfully. 
+
+            Please review and approve the deployment to proceed.
+
+            https://dcloudsystems.atlassian.net/browse/${{ inputs.jira_ref }}
+
+            Thanks,
+            DevOps Team
+          approvers: ${{ needs.Initialising.outputs.devops_ids }}
+          secret: ${{ secrets.PEM_KEY }}
