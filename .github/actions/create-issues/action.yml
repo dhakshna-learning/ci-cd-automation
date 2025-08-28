@@ -47,7 +47,7 @@ runs:
           TAGGED_APPROVERS=$(echo "$APPROVERS" | sed 's/,/ @/g' | sed 's/^/@/')
           DEFAULT_COMMENTS="\nTo approve, comment anything from: approve approved \n\nTo reject, comment anything from: reject rejected stop"
 
-          response=$(curl -s -X POST -H "Authorization: token $(TOKEN)" \
+          response=$(curl -s -X POST -H "Authorization: token $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -d @- "https://api.github.com/repos/$REPO/issues" <<EOF
           {
@@ -92,7 +92,7 @@ runs:
           echo -e "Expecting approval from $APPROVERS"
 
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            response=$(curl -s -H "Authorization: token $(TOKEN)" \
+            response=$(curl -s -H "Authorization: token $TOKEN" \
               "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
 
             if ! echo "$response" | jq -e . >/dev/null 2>&1; then
@@ -145,7 +145,7 @@ runs:
           fi
 
           # Add approval/rejection comment
-          curl -s -X POST -H "Authorization: token $(TOKEN)" \
+          curl -s -X POST -H "Authorization: token $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -d "{\"body\": \"$COMMENT_MESSAGE\"}" \
             "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
@@ -157,7 +157,7 @@ runs:
 
         elif [[ "$MODE" == "close" ]]; then
           echo "🔒 Closing issue #$ISSUE_NUMBER..."
-          response=$(curl -s -X PATCH -H "Authorization: token $(TOKEN)" \
+          response=$(curl -s -X PATCH -H "Authorization: token $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -d '{"state": "closed"}' \
             "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
