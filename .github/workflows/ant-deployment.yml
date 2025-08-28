@@ -30,37 +30,37 @@ jobs:
       
       - name: Retrieve the Issue number
         run: |
-          ISSUE_ID=${{ needs.build.outputs.issue_number }}
+          ISSUE_ID=${{ needs.code-build.outputs.issue_number }}
           echo "Issue ID: $ISSUE_ID"
         shell: bash
 
-      - name: Wait for Approval
-        uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
-        id: wait_approval
-        with:
-          mode: "wait"
-          issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
-          issue-body: |
-            Hi Team,
+  #     - name: Wait for Approval
+  #       uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
+  #       id: wait_approval
+  #       with:
+  #         mode: "wait"
+  #         issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
+  #         issue-body: |
+  #           Hi Team,
 
-            Please review and approve the deployment to proceed.
+  #           Please review and approve the deployment to proceed.
 
-            https://dcloudsystems.atlassian.net/browse/${{ inputs.jira_ref }}
+  #           https://dcloudsystems.atlassian.net/browse/${{ inputs.jira_ref }}
 
-            Thanks,
-            DevOps Team
-          approvers: ${{ needs.Initialising.outputs.devops_ids }}
-          secret: ${{ secrets.PEM_KEY }}
+  #           Thanks,
+  #           DevOps Team
+  #         approvers: ${{ needs.Initialising.outputs.devops_ids }}
+  #         secret: ${{ secrets.PEM_KEY }}
 
-  deploy:
-    name: deployment
-    needs: wait-for-approval
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+  # deploy:
+  #   name: deployment
+  #   needs: wait-for-approval
+  #   runs-on: ubuntu-latest
+  #   environment: ${{ inputs.environment }}
 
-    steps:
-      - name: Deploying to ${{ inputs.environment }} environment
-        run: |
-          echo "Deploying to ${{ inputs.environment }} environment..."
-          # Add your deployment commands here
-          echo "Deployment to ${{ inputs.environment }} completed."
+  #   steps:
+  #     - name: Deploying to ${{ inputs.environment }} environment
+  #       run: |
+  #         echo "Deploying to ${{ inputs.environment }} environment..."
+  #         # Add your deployment commands here
+  #         echo "Deployment to ${{ inputs.environment }} completed."
