@@ -48,13 +48,13 @@ jobs:
         run: |
           echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
 
-    code-build:
-      name: Code Build
-      needs: Initialising
-      runs-on: ubuntu-latest
-      environment: ${{ inputs.environment }}
-      outputs:
-        devops: ${{ needs.Initialising.outputs.devops }}
+  code-build:
+    name: Code-Build
+    needs: Initialising
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      devops: ${{ needs.Initialising.outputs.devops }}
 
 
       steps:
