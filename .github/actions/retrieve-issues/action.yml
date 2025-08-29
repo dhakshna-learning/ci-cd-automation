@@ -11,6 +11,9 @@ inputs:
   issue-number:
     description: "Issue number to wait on or close"
     required: true
+  approvers:
+    description: "List of approvers"
+    required: false
 
 
 runs:
@@ -23,6 +26,7 @@ runs:
         REPO: ${{ github.repository }}
         PEM: ${{ inputs.secret }}
         ISSUE_NUMBER: ${{ inputs.issue-number }}
+        APPROVERS: ${{ inputs.approvers }}
       shell: bash
       run: |
         set -euo pipefail
