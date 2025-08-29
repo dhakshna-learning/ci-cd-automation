@@ -123,6 +123,7 @@ runs:
           if [ "$APPROVED" == "false" ]; then
             exit 1
           fi
+        fi
 
         # 
 
