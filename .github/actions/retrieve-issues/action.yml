@@ -69,6 +69,7 @@ runs:
             echo "issue with the approvers variable"
             exit 1
           fi
+        fi
 
         #   while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
         #     response=$(curl -s -H "Authorization: token $TOKEN" \
