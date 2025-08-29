@@ -50,6 +50,7 @@ jobs:
           mode: "wait"
           issue-number: ${{ steps.get-issue.outputs.ISSUE_ID }}
           secret: ${{ secrets.PEM_KEY }}
+          approvers: ${{ needs.Initialising.outputs.devops_ids }}
 
   # deploy:
   #   name: deployment
