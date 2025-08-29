@@ -51,7 +51,7 @@ jobs:
         id: wait_approval
         with:
           mode: "wait"
-          issue-number: ${{ steps.get-issue.outputs.ISSUE_ID }}
+          issue-number: ${{ inputs.issue_number  }}
           secret: ${{ secrets.PEM_KEY }}
           approvers: ${{ inputs.approvers }}
 
