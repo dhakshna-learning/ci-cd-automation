@@ -52,6 +52,7 @@ jobs:
           issue-body: "Please approve or reject the deployment to the ${{ inputs.environment }} environment."
           approvers: ${{ needs.Initialising.outputs.devops_ids }}
           issue-number: ${{ steps.get-issue.outputs.ISSUE_ID }}
+          secret: ${{ secrets.PEM_KEY }}
 
   # deploy:
   #   name: deployment
