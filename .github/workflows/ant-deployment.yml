@@ -32,9 +32,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       
       - name: Retrieve the Issue number
+        id: get-issue
         shell: bash
         run: |
-          ISSUE_ID=${{ inputs.issue_number }}
+          ISSUE_ID=${{ inputs.issue_number }} >> "$GITHUB_OUTPUT"
           
           if [ -z "$ISSUE_ID" ]; then
             echo "Error: ISSUE_ID is empty"
@@ -42,26 +43,15 @@ jobs:
           fi
           echo "Issue ID: $ISSUE_ID"
 
-
-        
-
-  #     - name: Wait for Approval
-  #       uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
-  #       id: wait_approval
-  #       with:
-  #         mode: "wait"
-  #         issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
-  #         issue-body: |
-  #           Hi Team,
-
-  #           Please review and approve the deployment to proceed.
-
-  #           https://dcloudsystems.atlassian.net/browse/${{ inputs.jira_ref }}
-
-  #           Thanks,
-  #           DevOps Team
-  #         approvers: ${{ needs.Initialising.outputs.devops_ids }}
-  #         secret: ${{ secrets.PEM_KEY }}
+      - name: Wait for Approval
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
+        id: wait_approval
+        with:
+          mode: "wait"
+          issue-title: "[${{ inputs.jira_ref }}] Approval needed for deploying to ${{ inputs.environment }} environment"
+          issue-body: "Please approve or reject the deployment to the ${{ inputs.environment }} environment."
+          approvers: ${{ needs.Initialising.outputs.devops_ids }}
+          issue-number: ${{ steps.get-issue.outputs.ISSUE_ID }}
 
   # deploy:
   #   name: deployment
