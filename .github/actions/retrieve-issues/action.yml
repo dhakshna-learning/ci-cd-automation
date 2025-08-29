@@ -37,6 +37,8 @@ runs:
 
         if [[ "$MODE" == "wait" ]]; then
           echo "⏳ Waiting for approval on issue $ISSUE_NUMBER..."
+          ADDITIONAL_APPROVALS="Proceed,do,go,go ahead,deploy"
+          ADDITIONAL_REJECTIONS="Hold,hold on,pause,wait"
           MAX_WAIT=$((30*60))  # 30 mins
           ELAPSED=0
           SLEEP_NORMAL=30
