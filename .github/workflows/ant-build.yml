@@ -17,6 +17,9 @@ on:
       issue_number:
         description: "Created Issue ID"
         value: ${{ jobs.code-build.outputs.issue_number }}
+      devops_ids:
+        description: "DevOps Team Approver IDs"
+        value: ${{ jobs.Initialising.outputs.devops_ids }}
 
 permissions:
   id-token: write  
