@@ -17,6 +17,9 @@ inputs:
   secret:
     description: "GitHub token or app secret"
     required: true
+  issue-number:
+    description: "Issue number to wait on or close"
+    required: true
 
 outputs:
   issue-number:
@@ -35,6 +38,7 @@ runs:
         ISSUE_TITLE: ${{ inputs['issue-title'] }}
         ISSUE_SUMMARY: ${{ inputs['issue-body'] }}
         APPROVERS: ${{ inputs.approvers }}
+        ISSUE_NUMBER: ${{ inputs.issue-number }}
       shell: bash
       run: |
         set -euo pipefail
