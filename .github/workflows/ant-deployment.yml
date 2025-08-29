@@ -12,6 +12,9 @@ on:
       issue_number:
         required: true
         type: string
+      approvers:
+        required: true
+        type: string
 
 permissions:
   id-token: write  
@@ -50,7 +53,7 @@ jobs:
           mode: "wait"
           issue-number: ${{ steps.get-issue.outputs.ISSUE_ID }}
           secret: ${{ secrets.PEM_KEY }}
-          approvers: ${{ needs.Initialising.outputs.devops_ids }}
+          approvers: ${{ inputs.approvers }}
 
   # deploy:
   #   name: deployment
