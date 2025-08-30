@@ -15,6 +15,9 @@ on:
       jira_ref:
         required: false
         type: string
+      debug:
+        required: false
+        type: boolean
 
     outputs:
       issue_number:
@@ -41,8 +44,13 @@ jobs:
           
       - name: Run Ant Build
         run: |
-          ant ${{ inputs.ant_target }}
-
+          if [[ ${{ inputs.debug }} == "false" ]];
+          then
+            ant ${{ inputs.ant_target }}
+          else
+            ant -v ${{ inputs.ant_target }}
+          fi
+          
           if [ $? -eq 0 ]; then
             echo "✅ ${{ inputs.ant_target }} completed successfully"
           else
