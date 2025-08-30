@@ -9,59 +9,25 @@ on:
       environment:
         required: true
         type: string
-      jira_ref:
+      branch:
         required: true
+        type: string
+      jira_ref:
+        required: false
         type: string
 
     outputs:
       issue_number:
         description: "Created Issue ID"
         value: ${{ jobs.code-build.outputs.issue_number }}
-      devops_ids:
-        description: "DevOps Team Approver IDs"
-        value: ${{ jobs.Initialising.outputs.devops_ids }}
 
 permissions:
   id-token: write  
   contents: read
 
 jobs:
-  Initialising:
-    name: Initialisation
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    outputs:
-      devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}
-    
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Check Approvers
-        id: check_approvers
-        run: |
-          DATA_FILE=".github/approvers.json"
-          TEAMS=$(jq -r '.teams | keys[]' "$DATA_FILE")
-          
-          for team in $TEAMS; do
-              # Extract IDs for the team
-              user_ids=$(jq -r --arg team "$team" '.teams[$team][]?.id' "$DATA_FILE" | sort -u | paste -sd "," -)
-          
-              if [[ -n "$user_ids" ]]; then
-                  echo "${team,,}_ids=$user_ids" >> "$GITHUB_OUTPUT"
-                  echo "$team IDs: $user_ids"
-              else
-                  echo "Skipping $team (no approvers found)"
-              fi
-          done
-
-      - name: Debug Outputs
-        run: |
-          echo -e "devops_ids: ${{ steps.check_approvers.outputs.devops_ids }}"
-
   code-build:
     name: Code-Build
-    needs: Initialising
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     outputs:
@@ -69,14 +35,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4            
-          
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: actions/checkout@v4 
         with:
-          role-to-assume: ${{ secrets.OIDC_ARN }}
-          aws-region: ${{ vars.REGION }}
-
+          ref: ${{ inputs.branch }}           
+          
       - name: Run Ant Build
         run: |
           ant ${{ inputs.ant_target }}
@@ -95,6 +57,7 @@ jobs:
           path: ./build/jar/*
 
       - name: Checkout automation Repo
+        if: ${{ inputs.environment != 'Dev' }}
         uses: actions/checkout@v4
         with:
           repository: dhakshna-learning/ci-cd-automation
@@ -102,12 +65,8 @@ jobs:
           path: ci-cd-automation
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Debug automation Repo
-        run: |
-          ls
-          ls -ltra ./ci-cd-automation
-
       - name: creating issue for approval
+        if: ${{ inputs.environment != 'Dev' }}
         uses: dhakshna-learning/ci-cd-automation/.github/actions/create-issues@master
         id: create_issue
         with:
@@ -126,14 +85,3 @@ jobs:
             DevOps Team
           approvers: ${{ needs.Initialising.outputs.devops_ids }}
           secret: ${{ secrets.PEM_KEY }}
-
-      # - name: Parse the Issue Number
-      #   id: parse_issue
-      #   run: |
-      #     ISSUE_NUMBER="${{ steps.create_issue.outputs.issue-number }}"
-      #     if [[ -z "$ISSUE_NUMBER" ]]; then
-      #       echo "❌ Issue number not found!"
-      #       exit 1
-      #     fi
-      #     echo "✅ Issue number is $ISSUE_NUMBER"
-      #     echo "issue-number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
