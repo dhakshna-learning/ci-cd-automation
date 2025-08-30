@@ -1,0 +1,45 @@
+name: Get Approver ID
+description: "Retrieve the approver IDs from approvers.json"
+
+inputs:
+  branch:
+    description: "Which branch needs to be checkout?"
+    required: true
+  debug:
+    description: "Debug Mode"
+    required: false
+
+outputs:
+  devops_ids:
+    description: "Approvers from DevOps Team"
+    value: ${{ steps.fetch_approvers.outputs.devops_ids }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Code Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
+
+    - name: Fetch Approver IDs
+      id: fetch_approvers
+      shell: bash
+      run: |
+        DATA_FILE=".github/approvers.json"
+          TEAMS=$(jq -r '.teams | keys[]' "$DATA_FILE")
+          
+          for team in $TEAMS; do
+              user_ids=$(jq -r --arg team "$team" '.teams[$team][]?.id' "$DATA_FILE" | sort -u | paste -sd "," -)
+              if [[ -n "$user_ids" ]]; then
+                  echo "${team,,}_ids=$user_ids" >> "$GITHUB_OUTPUT"
+                  echo "$team IDs: $user_ids"
+              else
+                  echo "Skipping $team (no approvers found)"
+              fi
+          done
+
+        if [[ ${{ inputs.debug == "true" }} ]];
+        then 
+          echo "devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}"
+        fi
