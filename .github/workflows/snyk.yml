@@ -1,0 +1,38 @@
+name: Snyk Scan Artifacts
+
+on:
+   workflow_call: 
+    inputs:
+      environment:
+        required: true
+        type: string
+
+permissions:
+    id-token: write
+    contents: read  
+   
+jobs:
+  snyk-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v4
+          
+      - name: Install Snyk CLI
+        run: |
+           npm install -g snyk
+           snyk --version
+           
+      - name: Run Snyk scan to find code vulnerabilities
+        if: ${{ inputs.Environment == 'Dev' }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --all-projects --policy-path=./.snyk
+        continue-on-error: true
+
+      - name: Run unmanaged scan to find vulnerabilities in dependencies
+        env:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+           snyk test --scan-all-unmanaged || true
+           snyk monitor --scan-unmanaged --project-name="Unmanaged Test"
