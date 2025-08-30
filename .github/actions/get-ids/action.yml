@@ -33,13 +33,15 @@ runs:
               user_ids=$(jq -r --arg team "$team" '.teams[$team][]?.id' "$DATA_FILE" | sort -u | paste -sd "," -)
               if [[ -n "$user_ids" ]]; then
                   echo "${team,,}_ids=$user_ids" >> "$GITHUB_OUTPUT"
-                  echo "$team IDs: $user_ids"
+                  # echo "$team IDs: $user_ids"
               else
                   echo "Skipping $team (no approvers found)"
               fi
           done
-
-        if [[ ${{ inputs.debug }}  == "true" ]];
-        then 
-          echo "devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}"
-        fi
+    
+    - name: Debug IDs
+      if: ${{ inputs.debug == 'true' }}
+      id: debug-id
+      shell: bash
+      run: |
+        echo "devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}"
