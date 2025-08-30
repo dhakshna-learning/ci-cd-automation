@@ -8,6 +8,7 @@ on:
         type: string
       branch:
         required: true
+        typr: string
 
 permissions:
     id-token: write
