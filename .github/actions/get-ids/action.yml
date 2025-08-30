@@ -44,4 +44,8 @@ runs:
       id: debug-id
       shell: bash
       run: |
+        if [[ -z ${{ steps.fetch_approvers.outputs.devops_ids }} ]];
+        then
+          echo "Issue with fetching id's in debug mode"
+        fi
         echo "devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}"
