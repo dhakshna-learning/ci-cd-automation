@@ -34,10 +34,3 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test --all-projects --policy-path=./.snyk
         continue-on-error: true
-
-      - name: Run unmanaged scan to find vulnerabilities in dependencies
-        env:
-            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: |
-           snyk test --scan-all-unmanaged || true
-           snyk monitor --scan-unmanaged --project-name="Unmanaged Test"
