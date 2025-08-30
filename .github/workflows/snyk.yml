@@ -1,5 +1,4 @@
 name: Snyk Scan Artifacts
-
 on:
    workflow_call: 
     inputs:
@@ -34,3 +33,9 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test --all-projects --policy-path=./.snyk
         continue-on-error: true
+
+      - name: Run Snyk scan to find code vulnerabilities on ${{ inputs.branch }}
+        if: ${{ inputs.environment != 'Dev' }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --all-projects --policy-path=./.snyk
