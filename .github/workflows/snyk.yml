@@ -6,6 +6,8 @@ on:
       environment:
         required: true
         type: string
+      branch:
+        required: true
 
 permissions:
     id-token: write
@@ -17,6 +19,8 @@ jobs:
     steps:
       - name: Code Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
           
       - name: Install Snyk CLI
         run: |
@@ -24,7 +28,7 @@ jobs:
            snyk --version
            
       - name: Run Snyk scan to find code vulnerabilities
-        if: ${{ inputs.Environment == 'Dev' }}
+        if: ${{ inputs.environment == 'Dev' }}
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk code test --all-projects --policy-path=./.snyk
