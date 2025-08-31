@@ -18,6 +18,9 @@ on:
       debug:
         required: false
         type: boolean
+      approvers:
+        required: false
+        type: string        
 
     outputs:
       issue_number:
@@ -91,5 +94,5 @@ jobs:
 
             Thanks,
             DevOps Team
-          approvers: ${{ needs.Initialising.outputs.devops_ids }}
+          approvers: ${{ inputs.approvers }}
           secret: ${{ secrets.PEM_KEY }}
