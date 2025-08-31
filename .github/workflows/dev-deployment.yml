@@ -1,0 +1,26 @@
+name: CD dev deployment Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+
+permissions:
+  id-token: write  
+  contents: read
+
+jobs:
+  deploy2Dev:
+    name: deployment
+    if: ${{ inputs.environment == 'Dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Deploying to ${{ inputs.environment }} environment
+        run: |
+          echo "Deploying to ${{ inputs.environment }} environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
