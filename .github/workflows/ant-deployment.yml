@@ -7,13 +7,13 @@ on:
         required: true
         type: string
       jira_ref:
-        required: true
+        required: false
         type: string
       issue_number:
-        required: true
+        required: false
         type: string
       approvers:
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -22,6 +22,7 @@ permissions:
 
 jobs:
   wait-for-approval:
+    if: ${{ inputs.environment != 'Dev' }}
     name: Wait-for-Approval
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
@@ -55,15 +56,15 @@ jobs:
           secret: ${{ secrets.PEM_KEY }}
           approvers: ${{ inputs.approvers }}
 
-  # deploy:
-  #   name: deployment
-  #   needs: wait-for-approval
-  #   runs-on: ubuntu-latest
-  #   environment: ${{ inputs.environment }}
+  deploy2Dev:
+    name: deployment
+    if: ${{ inputs.environment == 'Dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
-  #   steps:
-  #     - name: Deploying to ${{ inputs.environment }} environment
-  #       run: |
-  #         echo "Deploying to ${{ inputs.environment }} environment..."
-  #         # Add your deployment commands here
-  #         echo "Deployment to ${{ inputs.environment }} completed."
+    steps:
+      - name: Deploying to ${{ inputs.environment }} environment
+        run: |
+          echo "Deploying to ${{ inputs.environment }} environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
