@@ -1,0 +1,183 @@
+name: "Retrive Issue for Approval"
+description: "Get the issue number for approval workflow"
+
+inputs:
+  mode:
+    description: "Action mode: create | wait | close"
+    required: true
+  secret:
+    description: "GitHub token or app secret"
+    required: true
+  issue-number:
+    description: "Issue number to wait on or close"
+    required: true
+  approvers:
+    description: "List of approvers"
+    required: false
+  approval-message:
+    description: "Approval request message"
+    required: false
+    default: "Please review and approve this deployment."
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Approval Logic
+      id: approval
+      env:
+        MODE: ${{ inputs.mode }}
+        REPO: ${{ github.repository }}
+        PEM: ${{ inputs.secret }}
+        ISSUE_NUMBER: ${{ inputs.issue-number }}
+        APPROVERS: ${{ inputs.approvers }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        PEM_KEY="${{ github.action_path }}/secret.pem"
+        echo "${{ inputs.secret }}" > "$PEM_KEY"
+        chmod 600 "$PEM_KEY"
+        chmod +x "${{ github.action_path }}/scripts/generate_token.sh"        
+        TOKEN=$("${{ github.action_path }}/scripts/generate_token.sh" "$PEM_KEY")
+        echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+        echo "Using token: $TOKEN"
+
+        if [[ "$MODE" == "wait" ]]; then
+          if [[ -z "$APPROVERS" ]]; then
+            echo "⚠️ No approvers provided. Skipping tagging."
+          else
+            COMMENT_BODY="${{ inputs.approval-message }}"
+        
+            # Build GitHub mentions for approvers
+            MENTION_STRING=""
+            for user in $APPROVERS; do
+              MENTION_STRING="@$user"
+            done
+        
+            FINAL_COMMENT="$COMMENT_BODY $MENTION_STRING"
+        
+            echo "📢 Posting approval request: $FINAL_COMMENT"
+        
+            curl -s -X POST -H "Authorization: token $TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -d "{\"body\": \"$FINAL_COMMENT\"}" \
+              "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
+          fi
+        fi
+
+        if [[ "$MODE" == "wait" ]]; then
+          echo "⏳ Waiting for approval on issue $ISSUE_NUMBER..."
+          ADDITIONAL_APPROVALS="Proceed,do,go,go ahead,deploy"
+          ADDITIONAL_REJECTIONS="Hold,hold on,pause,wait"
+          MAX_WAIT=$((30*60))  # 30 mins
+          ELAPSED=0
+          SLEEP_NORMAL=30
+          SLEEP_ERROR=300
+
+          DEFAULT_APPROVALS="approved|approve|yes|done"
+          APPROVAL_REGEX="^($DEFAULT_APPROVALS)$"
+          if [[ -n "$ADDITIONAL_APPROVALS" ]]; then
+            EXTRA_APPROVALS=$(echo "$ADDITIONAL_APPROVALS" | sed 's/,/|/g')
+            APPROVAL_REGEX="^($DEFAULT_APPROVALS|$EXTRA_APPROVALS)$"
+          fi
+
+          DEFAULT_REJECTIONS="rejected|reject|no|stop"
+          REJECTION_REGEX="^($DEFAULT_REJECTIONS)$"
+          if [[ -n "$ADDITIONAL_REJECTIONS" ]]; then
+            EXTRA_REJECTIONS=$(echo "$ADDITIONAL_REJECTIONS" | sed 's/,/|/g')
+            REJECTION_REGEX="^($DEFAULT_REJECTIONS|$EXTRA_REJECTIONS)$"
+          fi
+
+          APPROVED="false"
+          COMMENT_MESSAGE=""
+          echo -e "Expecting approval from $APPROVERS"
+          if [[ -z $APPROVERS ]]; then
+            echo "issue with the approvers variable"
+            exit 1
+          fi
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            response=$(curl -s -H "Authorization: token $TOKEN" \
+              "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments")
+
+            if ! echo "$response" | jq -e . >/dev/null 2>&1; then
+              echo "❌ Failed to parse comments. Retrying in $SLEEP_ERROR seconds..."
+              echo "API response was: $response"
+              sleep "$SLEEP_ERROR"
+              ELAPSED=$((ELAPSED + SLEEP_ERROR))
+              continue
+            fi
+
+            comments=$(echo "$response" | jq -r '.[] | @base64')
+
+            while IFS= read -r encoded_comment; do
+              comment=$(echo "$encoded_comment" | base64 --decode)
+              if [[ -z "$encoded_comment" ]]; then
+                continue
+              fi
+              # Validate comment is JSON
+              if ! echo "$comment" | jq -e 'type == "object"' >/dev/null 2>&1; then
+                continue
+              fi
+
+              user=$(echo "$comment" | jq -r '.user.login // "unknown"')
+              body=$(echo "$comment" | jq -r '.body // ""' | tr '[:upper:]' '[:lower:]')
+
+              if [ "$user" == "unknown" ]; then
+                continue
+              fi
+
+              if echo "$APPROVERS" | grep -qi "\\b$user\\b"; then
+                if echo "$body" | grep -Eiq "$APPROVAL_REGEX"; then
+                  APPROVED="true"
+                  COMMENT_MESSAGE="✅ Approved by @$user"
+                  break 2
+                elif echo "$body" | grep -Eiq "$REJECTION_REGEX"; then
+                  APPROVED="false"
+                  COMMENT_MESSAGE="❌ Rejected by @$user"
+                  break 2
+                fi
+              fi
+            done <<< "$comments"
+
+            sleep "$SLEEP_NORMAL"
+            ELAPSED=$((ELAPSED + SLEEP_NORMAL))
+          done
+
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ] && [ "$APPROVED" == "false" ]; then
+            echo "⏱ Reached maximum wait without approval."
+            exit 1
+          fi
+
+          # Add approval/rejection comment
+          curl -s -X POST -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d "{\"body\": \"$COMMENT_MESSAGE\"}" \
+            "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
+
+          echo "$COMMENT_MESSAGE"
+          if [ "$APPROVED" == "false" ]; then
+            exit 1
+          fi
+        fi
+
+        # 
+
+        # elif [[ "$MODE" == "close" ]]; then
+        #   echo "🔒 Closing issue #$ISSUE_NUMBER..."
+        #   response=$(curl -s -X PATCH -H "Authorization: token $TOKEN" \
+        #     -H "Accept: application/vnd.github+json" \
+        #     -d '{"state": "closed"}' \
+        #     "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
+        #   state=$(echo "$response" | jq -r '.state')
+        #   if [[ "$state" == "closed" ]]; then
+        #     echo "✅ Issue closed successfully"
+        #   else
+        #     echo "❌ Failed to close issue: $response"
+        #     exit 1
+        #   fi
+        # else
+        #   echo "❌ Unknown mode: $MODE"
+        #   exit 1
+        # fi
