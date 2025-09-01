@@ -18,8 +18,11 @@ on:
       promote2prd:
         required: true
         type: boolean
+
     outputs:
-      markers: ${{ jobs.deployment-markers.outputs.marker }}
+       markers:
+        description: "Markers"
+        value: ${{ jobs.deployment-markers.outputs.marker }}
 
 permissions:
   id-token: write  
