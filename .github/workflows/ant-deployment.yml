@@ -18,6 +18,8 @@ on:
       promote2prd:
         required: true
         type: boolean
+    outputs:
+      markers: ${{ jobs.deployment-markers.outputs.marker }}
 
 permissions:
   id-token: write  
@@ -183,3 +185,16 @@ jobs:
           approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
           approval-message: "Production Deployment is completed 🎯, please validate and approve to proceed further...!"
           labels: "Production"  
+
+  deployment-markers:
+      name: deployment-markers
+      needs: [deploy2Prd]
+      runs-on: ubuntu-latest
+      outputs:
+        marker: ${{ steps.merkers.outputs.deployment_status }}
+      steps:
+        - name: mark-deployments
+          id: markers
+          run: |
+            export deployemt_status="completed" >> $GITHUB_OUTPUT
+          
