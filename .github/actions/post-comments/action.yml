@@ -18,6 +18,9 @@ inputs:
     description: "Approval request message"
     required: false
     default: "Please review and approve this deployment."
+  labels:
+    description: "Labeling the issue"
+    required: true
 
 
 runs:
@@ -54,15 +57,23 @@ runs:
             for user in $APPROVERS; do
               MENTION_STRING="@$user"
             done
-        
+
+            LABEL="approval-required:${{ inputs.stage }}"
             FINAL_COMMENT="$COMMENT_BODY $MENTION_STRING"
         
             echo "📢 Posting approval request: $FINAL_COMMENT"
+
+            curl -s -X POST -H "Authorization: token $TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -d "{\"labels\": [\"$LABEL\"]}" \
+              "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/labels" >/dev/null
         
             curl -s -X POST -H "Authorization: token $TOKEN" \
               -H "Accept: application/vnd.github+json" \
               -d "{\"body\": \"$FINAL_COMMENT\"}" \
               "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
+
+            LABEL_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           fi
         fi
 
@@ -121,9 +132,14 @@ runs:
                 continue
               fi
 
+              created_at=$(echo "$comment" | jq -r '.created_at')
               user=$(echo "$comment" | jq -r '.user.login // "unknown"')
               body=$(echo "$comment" | jq -r '.body // ""' | tr '[:upper:]' '[:lower:]')
 
+
+              if [[ "$created_at" < "$LABEL_TIMESTAMP" ]]; then
+                continue
+              fi
               if [ "$user" == "unknown" ]; then
                 continue
               fi
