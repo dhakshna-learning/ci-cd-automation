@@ -15,6 +15,9 @@ on:
       debug:
         required: false
         type: string
+      promote2prd:
+        required: true
+        type: boolean
 
 permissions:
   id-token: write  
@@ -146,4 +149,37 @@ jobs:
           approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
           approval-message: "Prelive Deployment is completed 🎯, please validate and approve to proceed further...!"
           labels: "Sublive"
-  
+
+  deploy2Prd:  
+    name: Deployment to Production
+    needs: [wait-for-approval,deploy2Reg,deploy2Prl]
+    if: ${{ inputs.promote2prd == 'true' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: update comments
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/update-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          update-message: "Initiating the Live Deployment 🚀"
+          
+      - name: Deployment to Prod environments
+        id: prd-deployment
+        run: |
+          echo "Deploying to Prd environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
+
+      - name: Waiting for Prd validation to be completed
+        id: prd-approval
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/post-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
+          approval-message: "Production Deployment is completed 🎯, please validate and approve to proceed further...!"
+          labels: "Production"  
