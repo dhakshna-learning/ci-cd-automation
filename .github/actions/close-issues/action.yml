@@ -18,9 +18,6 @@ inputs:
     description: "Approval request message"
     required: false
     default: "Closing this issue."
-  labels:
-    description: "Labeling the issue"
-    required: true
 
 
 runs:
