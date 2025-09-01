@@ -28,7 +28,7 @@ jobs:
     environment: ${{ inputs.environment }}
     outputs:
       devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}
-      test_ids: ${{ stesp.fetch_approvers.outputs.test_ids }}
+      test_ids: ${{ steps.fetch_approvers.outputs.test_ids }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
