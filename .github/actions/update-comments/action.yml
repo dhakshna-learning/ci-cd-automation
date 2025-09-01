@@ -41,7 +41,7 @@ runs:
 
         if [[ "$MODE" == "wait" ]]; then
             COMMENT_BODY="${{ inputs.update-message }}"
-            FINAL_COMMENT="$COMMENT_BODY $MENTION_STRING"
+            FINAL_COMMENT="$COMMENT_BODY"
             
             curl -s -X POST -H "Authorization: token $TOKEN" \
               -H "Accept: application/vnd.github+json" \
