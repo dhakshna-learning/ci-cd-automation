@@ -1,0 +1,72 @@
+name: "Close issue"
+description: "close the issue"
+
+inputs:
+  mode:
+    description: "Action mode: create | wait | close"
+    required: true
+  secret:
+    description: "GitHub token or app secret"
+    required: true
+  issue-number:
+    description: "Issue number to wait on or close"
+    required: true
+  approvers:
+    description: "List of approvers"
+    required: false
+  approval-message:
+    description: "Approval request message"
+    required: false
+    default: "Closing this issue."
+  labels:
+    description: "Labeling the issue"
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Approval Logic
+      id: approval
+      env:
+        MODE: ${{ inputs.mode }}
+        REPO: ${{ github.repository }}
+        PEM: ${{ inputs.secret }}
+        ISSUE_NUMBER: ${{ inputs.issue-number }}
+        APPROVERS: ${{ inputs.approvers }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        PEM_KEY="${{ github.action_path }}/secret.pem"
+        echo "${{ inputs.secret }}" > "$PEM_KEY"
+        chmod 600 "$PEM_KEY"
+        chmod +x "${{ github.action_path }}/scripts/generate_token.sh"        
+        TOKEN=$("${{ github.action_path }}/scripts/generate_token.sh" "$PEM_KEY")
+        echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+        COMMENT_BODY="${{ inputs.approval-message }}"
+
+        echo "Using token: $TOKEN"
+
+        if [[ "$MODE" == "close" ]]; then
+          echo "🔒 Closing issue #$ISSUE_NUMBER..."
+
+          curl -s -X POST -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d "{\"body\": \"$COMMENT_BODY\"}" \
+            "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" >/dev/null
+          
+          response=$(curl -s -X PATCH -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"state": "closed"}' \
+            "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER")
+          state=$(echo "$response" | jq -r '.state')
+          if [[ "$state" == "closed" ]]; then
+            echo "✅ Issue closed successfully"
+          else
+            echo "❌ Failed to close issue: $response"
+            exit 1
+          fi
+        else
+          echo "❌ Unknown mode: $MODE"
+          exit 1
+        fi
