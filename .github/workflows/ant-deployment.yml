@@ -103,3 +103,29 @@ jobs:
           secret: ${{ secrets.PEM_KEY }}
           approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
           approval-message: "Regression Deployment is completed 🎯, please validate and approve to proceed further...!"
+          
+  deploy2Prl:  
+    name: Deployment to Prelive
+    needs: [wait-for-approval,deploy2Reg]
+    if: ${{ inputs.environment != 'Dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Deployment to Prelive environments
+        id: prl-deployment
+        run: |
+          echo "Deploying to Reg environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
+
+      - name: Waiting for Prl validation to be completed
+        id: prl-approval
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/post-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
+          approval-message: "Prelive Deployment is completed 🎯, please validate and approve to proceed further...!"
+  
