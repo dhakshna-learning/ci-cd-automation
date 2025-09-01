@@ -191,7 +191,7 @@ jobs:
       needs: [deploy2Prd]
       runs-on: ubuntu-latest
       outputs:
-        marker: ${{ steps.merkers.outputs.deployment_status }}
+        marker: ${{ steps.markers.outputs.deployment_status }}
       steps:
         - name: mark-deployments
           id: markers
