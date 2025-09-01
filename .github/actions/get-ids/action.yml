@@ -13,6 +13,9 @@ outputs:
   devops_ids:
     description: "Approvers from DevOps Team"
     value: ${{ steps.fetch_approvers.outputs.devops_ids }}
+  test_ids:
+    description: "Approvers from Testing Team"
+    value: ${{ steps.fetch_approvers.outputs.test_ids }}
 
 runs:
   using: "composite"
@@ -44,8 +47,12 @@ runs:
       id: debug-id
       shell: bash
       run: |
-        if [[ -z ${{ steps.fetch_approvers.outputs.devops_ids }} ]];
-        then
-          echo "Issue with fetching id's in debug mode"
-        fi
-        echo "devops_ids: ${{ steps.fetch_approvers.outputs.devops_ids }}"
+        for team in devops test; do
+          ids_var="$team_ids"
+          ids_val="${!ids_var}"   # indirect expansion
+          if [[ -z "$ids_val" ]]; then
+            echo "Issue with fetching IDs for $team"
+          else
+            echo "$ids_var: $ids_val"
+          fi
+        done
