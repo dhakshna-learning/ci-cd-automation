@@ -48,7 +48,7 @@ runs:
       shell: bash
       run: |
         for team in devops test; do
-          ids_var="$team_ids"
+          ids_var="${team}_ids"
           ids_val="${!ids_var}"   # indirect expansion
           if [[ -z "$ids_val" ]]; then
             echo "Issue with fetching IDs for $team"
