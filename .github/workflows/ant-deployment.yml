@@ -85,4 +85,10 @@ jobs:
 
       - name: Waiting for Reg validation to be completed
         id: reg-approval
-  
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/post-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          approvers: ${{ inputs.approvers }}
+          approval-message: "Regression Deployment is completed 🎯, please validate and approve to proceed further...!"
