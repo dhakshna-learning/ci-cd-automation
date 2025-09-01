@@ -11,7 +11,7 @@ inputs:
   issue-number:
     description: "Issue number to wait on or close"
     required: true
-  approval-message:
+  update-message:
     description: "Approval request message"
     required: false
     default: "Deployment initiated 🚀"
@@ -40,7 +40,7 @@ runs:
         echo "Using token: $TOKEN"
 
         if [[ "$MODE" == "wait" ]]; then
-            COMMENT_BODY="${{ inputs.approval-message }}"
+            COMMENT_BODY="${{ inputs.update-message }}"
             FINAL_COMMENT="$COMMENT_BODY $MENTION_STRING"
             
             curl -s -X POST -H "Authorization: token $TOKEN" \
