@@ -103,6 +103,7 @@ jobs:
           secret: ${{ secrets.PEM_KEY }}
           approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
           approval-message: "Regression Deployment is completed 🎯, please validate and approve to proceed further...!"
+          labels: "Approval-Required: Reg"
           
   deploy2Prl:  
     name: Deployment to Prelive
@@ -128,4 +129,5 @@ jobs:
           secret: ${{ secrets.PEM_KEY }}
           approvers: ${{ needs.wait-for-approval.outputs.test_ids }}
           approval-message: "Prelive Deployment is completed 🎯, please validate and approve to proceed further...!"
+          labels: "Approval-Required: Sublive"
   
