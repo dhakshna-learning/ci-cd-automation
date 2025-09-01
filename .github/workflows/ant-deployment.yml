@@ -158,7 +158,7 @@ jobs:
   deploy2Prd:  
     name: Deployment to Production
     needs: [wait-for-approval,deploy2Reg,deploy2Prl]
-    if: ${{ inputs.promote2prd == 'true' }}
+    if: ${{ inputs.promote2prd == 'True' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
