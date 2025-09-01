@@ -87,6 +87,14 @@ jobs:
     environment: ${{ inputs.environment }}
 
     steps:
+      - name: update comments
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/update-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          update-message: "Initiating the Regression Deployment 🚀"
+          
       - name: Deployment to regression environments
         id: reg-deployment
         run: |
@@ -113,6 +121,14 @@ jobs:
     environment: ${{ inputs.environment }}
 
     steps:
+      - name: update comments
+        uses: dhakshna-learning/ci-cd-automation/.github/actions/update-comments@master
+        with:
+          mode: "wait"
+          issue-number: ${{ inputs.issue_number  }}
+          secret: ${{ secrets.PEM_KEY }}
+          update-message: "Initiating the Sublive Deployment 🚀"
+          
       - name: Deployment to Prelive environments
         id: prl-deployment
         run: |
