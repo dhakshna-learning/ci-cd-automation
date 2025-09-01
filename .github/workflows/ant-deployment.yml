@@ -68,3 +68,21 @@ jobs:
           echo "Deploying to ${{ inputs.environment }} environment..."
           # Add your deployment commands here
           echo "Deployment to ${{ inputs.environment }} completed."
+  
+  deploy2Reg:
+    name: Deployment to Regression
+    if: ${{ inputs.environment != 'Dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Deployment to regression environments
+        id: reg-deployment
+        run: |
+          echo "Deploying to Reg environment..."
+          # Add your deployment commands here
+          echo "Deployment to ${{ inputs.environment }} completed."
+
+      - name: Waiting for Reg validation to be completed
+        id: reg-approval
+  
