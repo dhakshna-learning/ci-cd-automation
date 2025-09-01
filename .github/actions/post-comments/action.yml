@@ -58,7 +58,7 @@ runs:
               MENTION_STRING="@$user"
             done
 
-            LABEL="approval-required:${{ inputs.stage }}"
+            LABEL="approval-required:${{ inputs.labels }}"
             FINAL_COMMENT="$COMMENT_BODY $MENTION_STRING"
         
             echo "📢 Posting approval request: $FINAL_COMMENT"
