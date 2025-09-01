@@ -67,7 +67,7 @@ jobs:
           approvers: ${{ steps.fetch_approvers.outputs.devops_ids }}
 
   deploy2Dev:
-    name: deployment
+    name: Dev Deployment
     if: ${{ inputs.environment == 'Dev' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
